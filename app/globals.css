@@ -24,9 +24,7 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
-  animation: pageFadeIn 0.8s ease-out;
 }
 
 h1, h2, h3 {
@@ -46,6 +44,17 @@ a {
 }
 
 /* Global Logo & Nav */
+.nav-wrapper {
+  position: sticky;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  backdrop-filter: blur(8px) !important;
+  z-index: 9999;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
 .logo {
   font-size: 1.5rem;
   font-weight: 800;
@@ -53,17 +62,187 @@ a {
   text-decoration: none;
   color: var(--foreground);
 }
+
 .logo span {
   color: var(--accent);
+}
+
+.nav-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 2rem;
+  margin: 0 auto;
+  max-width: 1200px;
+}
+
+.nav-links {
+  display: flex;
+  gap: 2rem;
+  align-items: center;
 }
 
 .nav-link {
   color: var(--text-secondary);
   text-decoration: none;
   transition: color 0.3s ease;
+  font-weight: 600;
+  font-size: 0.9rem;
 }
-.nav-link:hover {
+
+.nav-link:hover, .nav-link.active {
   color: var(--accent);
+}
+
+.donate-split {
+  display: flex;
+  align-items: center;
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.donate-split a {
+  padding: 0.5rem 1.25rem;
+  font-weight: 800;
+  text-decoration: none;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 1;
+}
+
+.donate-split a.paypal {
+  background: rgba(0, 69, 124, 0.4);
+  color: #60a5fa;
+  border-right: 1px solid rgba(255,255,255,0.1);
+}
+
+.donate-split a.paypal:hover {
+  background: rgba(0, 69, 124, 0.8);
+}
+
+.donate-split a.upi {
+  background: rgba(51, 153, 204, 0.3);
+  color: #38bdf8;
+}
+
+.donate-split a.upi::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 153, 51, 0.95) 0%, rgba(255, 255, 255, 0.95) 50%, rgba(19, 136, 8, 0.95) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+}
+
+.donate-split a.upi:hover {
+  color: black;
+}
+
+.donate-split a.upi:hover::before {
+  opacity: 1;
+}
+
+.mobile-toggle, .mobile-close {
+  display: none;
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 0.5rem;
+  z-index: 10002;
+}
+
+.mobile-toggle.hidden {
+  display: none !important;
+}
+
+@media (max-width: 768px) {
+  .nav-wrapper {
+    backdrop-filter: blur(4px) !important;
+    background-color: rgba(0, 0, 0, 0.7) !important;
+    width: 100vw !important;
+  }
+  .nav-content {
+    padding: 0.75rem 1rem;
+    width: 100% !important;
+  }
+  .mobile-toggle {
+    display: flex !important;
+  }
+  .nav-links {
+    position: fixed;
+    top: 0; 
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: #0e0e0e !important;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 0.75rem;
+    z-index: 10001;
+    padding: 2rem;
+  }
+  .nav-links.mobile-open {
+    display: flex !important;
+  }
+  .mobile-close {
+    display: flex !important;
+    position: absolute;
+    top: 1.5rem;
+    right: 1.5rem;
+  }
+  .nav-link {
+    font-size: 1.1rem !important;
+    font-weight: 800 !important;
+    color: white !important;
+    padding: 0.75rem !important;
+    width: auto;
+    border-bottom: none;
+    display: block !important;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .nav-link.active {
+    color: var(--accent) !important;
+  }
+  .donate-split {
+    margin-top: 2rem;
+    display: flex !important;
+    flex-direction: column;
+    width: 280px;
+    gap: 0; /* Conjoin them */
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .donate-split a {
+    width: 100%;
+    justify-content: center !important;
+    padding: 1.1rem;
+    font-size: 0.9rem;
+    border: none;
+  }
+  .donate-split a.paypal { 
+    background: rgba(0, 69, 124, 0.5); 
+    color: #60a5fa;
+    border-bottom: 1px solid rgba(255,255,255,0.1); /* Conjoined divider */
+  }
+  .donate-split a.upi { 
+    background: rgba(161, 204, 42, 0.1); 
+    color: var(--accent);
+  }
 }
 
 .back-link {

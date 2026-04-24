@@ -12,6 +12,7 @@ const geistMono = Geist_Mono({
 });
 
 import { ScannerProvider } from "../context/ScannerContext";
+import Navbar from "../components/Navbar";
 
 export const metadata = {
   title: "FitCheck | Hardware Repack Matcher",
@@ -26,17 +27,16 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <head>
         <style dangerouslySetInnerHTML={{ __html: `
-          @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-          body { 
-            background: #0e0e0e; 
-            animation: fadeIn 0.4s ease-out forwards;
-          }
+          body { background: #0e0e0e; }
         ` }} />
       </head>
-      <body>
-        <ScannerProvider>
-          {children}
-        </ScannerProvider>
+      <body className="antialiased">
+        <div className="page-fade-wrapper">
+          <ScannerProvider>
+            <Navbar />
+            {children}
+          </ScannerProvider>
+        </div>
       </body>
     </html>
   );

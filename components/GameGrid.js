@@ -2,25 +2,22 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { db } from '../lib/firebase';
-import { collection, query, limit, getDocs, orderBy } from 'firebase/firestore';
+import { collection, query, getDocs, orderBy } from 'firebase/firestore';
 import { useScanner } from '../hooks/useScanner';
 import { calculateCompatibility } from '../utils/hardware-tiers';
 import SkeletonCard from './SkeletonCard';
 import GameSidePanel from './GameSidePanel';
 import Link from 'next/link';
-import { Search, ShieldCheck, AlertCircle, HelpCircle, ExternalLink, X, Plus, Minus, SortAsc, Calendar, Zap, ChevronLeft, ChevronRight, ArrowUp } from 'lucide-react';
+import { ArrowUp } from 'lucide-react';
+
+// New Modular Components
+import SearchBar from './SearchBar';
+import TagCloud from './TagCloud';
+import GameCard from './GameCard';
+import Pagination from './Pagination';
 
 const GENRES = ['Action', 'Adventure', 'RPG', 'Strategy', 'Shooter', 'Simulation', 'Horror', 'Open World', 'Hypervisor', 'Adult', 'Selective Download', 'Has DLC'];
 const ITEMS_PER_PAGE = 30;
-
-const getInitials = (title) => {
-  if (!title) return '';
-  const words = title.trim().split(/\s+/);
-  if (words.length >= 2) {
-    return (words[0][0] + words[1][0]).toUpperCase();
-  }
-  return title.charAt(0).toUpperCase();
-};
 
 export default function GameGrid() {
   const { specs } = useScanner();
@@ -73,8 +70,6 @@ export default function GameGrid() {
 
   const filteredAndSortedGames = useMemo(() => {
     const filtered = games.filter(game => {
-      // ── Hard exclude: non-game blog posts ─────────────────────────────────
-      // Uses scraped flag OR title-pattern fallback for old Firestore records
       const titleLower = game.title?.toLowerCase() || '';
       const isNonGame = game.isNonGame ||
         !game.imageUrl ||
@@ -113,7 +108,6 @@ export default function GameGrid() {
 
     return [...filtered].sort((a, b) => {
       const getTime = (g) => {
-        // Prefer the real FitGirl post date if available
         const dateStr = g.postDate || g.updatedAt;
         if (!dateStr) return 0;
         if (typeof dateStr === 'string') return new Date(dateStr).getTime();
@@ -134,118 +128,31 @@ export default function GameGrid() {
     currentPage * ITEMS_PER_PAGE
   );
 
-  const scrollToGrid = () => {
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
     setTimeout(() => {
       document.getElementById('results-top')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 50);
   };
 
-  const renderPagination = () => {
-    if (totalPages <= 1) return null;
-
-    const pages = [];
-    const range = 2; // How many pages to show around current
-
-    pages.push(1);
-
-    if (currentPage > range + 2) pages.push('...');
-
-    for (let i = Math.max(2, currentPage - range); i <= Math.min(totalPages - 1, currentPage + range); i++) {
-      pages.push(i);
-    }
-
-    if (currentPage < totalPages - range - 1) pages.push('...');
-
-    if (totalPages > 1) pages.push(totalPages);
-
-    return (
-      <div className="pagination">
-        <button
-          className="pag-btn prev"
-          disabled={currentPage === 1}
-          onClick={() => {
-            setCurrentPage(prev => prev - 1);
-            scrollToGrid();
-          }}
-        >
-          <ChevronLeft size={16} />
-        </button>
-
-        <div className="page-numbers">
-          {pages.map((p, idx) => (
-            p === '...' ? (
-              <span key={`dots-${idx}`} className="dots">...</span>
-            ) : (
-              <button
-                key={p}
-                className={`num-btn ${currentPage === p ? 'active' : ''}`}
-                onClick={() => {
-                  setCurrentPage(p);
-                  scrollToGrid();
-                }}
-              >
-                {p}
-              </button>
-            )
-          ))}
-        </div>
-
-        <button
-          className="pag-btn next"
-          disabled={currentPage === totalPages}
-          onClick={() => {
-            setCurrentPage(prev => prev + 1);
-            scrollToGrid();
-          }}
-        >
-          <ChevronRight size={16} />
-        </button>
-      </div>
-    );
-  };
-
   return (
     <div className="search-platform">
       <div className="search-hero">
-        <div className="search-container glass">
-          <Search className="search-icon" size={24} />
-          <input
-            type="text"
-            placeholder="Search thousands of repacks..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          <div className="sort-box">
-            <SortAsc size={16} />
-            <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
-              <option value="newest">Newest</option>
-              <option value="oldest">Oldest</option>
-              <option value="abc">A-Z</option>
-              <option value="size">Largest</option>
-              <option value="popular">Popular</option>
-            </select>
-          </div>
-          <div className={`nsfw-toggle ${showAdult ? 'active' : ''}`} onClick={() => setShowAdult(!showAdult)}>
-            <div className="nsfw-badge">{showAdult ? '18+' : 'Safe'}</div>
-            <span>NSFW</span>
-          </div>
-          {searchTerm && <X className="clear-btn" onClick={() => setSearchTerm('')} />}
-        </div>
+        <SearchBar 
+          searchTerm={searchTerm} 
+          setSearchTerm={setSearchTerm}
+          sortBy={sortBy}
+          setSortBy={setSortBy}
+          showAdult={showAdult}
+          setShowAdult={setShowAdult}
+        />
 
-        <div className="tag-cloud">
-          {GENRES.map(genre => {
-            // Hide the Adult tag entirely unless NSFW mode is on
-            if (genre === 'Adult' && !showAdult) return null;
-            const state = tagStates[genre] || 'none';
-            return (
-              <button key={genre} className={`tag-chip ${state}`} onClick={() => cycleTag(genre)}>
-                {state === 'included' && <Plus size={12} />}
-                {state === 'excluded' && <Minus size={12} />}
-                {genre}
-              </button>
-            );
-          })}
-        </div>
+        <TagCloud 
+          genres={GENRES}
+          tagStates={tagStates}
+          cycleTag={cycleTag}
+          showAdult={showAdult}
+        />
       </div>
 
       <div className="results-toolbar" id="results-top">
@@ -258,7 +165,11 @@ export default function GameGrid() {
             <button className={`leg-btn unsupported ${compFilter === 'unsupported' ? 'active' : ''}`} onClick={() => setCompFilter(curr => curr === 'unsupported' ? 'all' : 'unsupported')}>● Unsupported</button>
           </div>
         </div>
-        {renderPagination()}
+        <Pagination 
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+        />
       </div>
 
       <div className="grid">
@@ -276,55 +187,24 @@ export default function GameGrid() {
           </div>
         ) : paginatedGames.map(game => {
           const status = calculateCompatibility(specs, game);
-
-          // Highlight search matches
-          let titleNode = game.title;
-          if (searchTerm) {
-            const parts = game.title.split(new RegExp(`(${searchTerm})`, 'gi'));
-            titleNode = parts.map((part, i) =>
-              part.toLowerCase() === searchTerm.toLowerCase()
-                ? <span key={i} className="highlight">{part}</span>
-                : part
-            );
-          }
-
           return (
-            <div key={game.id} className={`game-card glass ${status}`} onClick={() => setSelectedGame(game)}>
-              <div className="image-wrapper">
-                {game.imageUrl
-                  ? <img src={game.imageUrl} alt={game.title} loading="lazy" className="poster" />
-                  : <div className="poster-fallback">{getInitials(game.title)}</div>
-                }
-              </div>
-              <div className="content">
-                <div className={`status-badge ${status}`}>{status}</div>
-                <h3>{titleNode}</h3>
-                {/* Real Specs Line from Steam */}
-                <div className="specs-line">
-                  {game.minGPUname && <span className="spec-chip gpu" title="Minimum GPU">🖥 {game.minGPUname}</span>}
-                  {game.minRAMgb && <span className="spec-chip ram" title="Minimum RAM">{game.minRAMgb}GB RAM</span>}
-                  {game.downloadSizeGB && <span className="spec-chip size">{game.downloadSizeGB.toFixed(1)}GB DL</span>}
-                  {game.steamAppId && (
-                    <a href={`https://store.steampowered.com/app/${game.steamAppId}`} target="_blank" rel="noopener noreferrer" className="spec-chip steam" onClick={e => e.stopPropagation()}>Steam ↗</a>
-                  )}
-                  {game.isHypervisor && <span className="spec-chip hv">Hypervisor</span>}
-                </div>
-                <div className="game-tags">
-                  {(game.steamGenres?.length ? game.steamGenres : game.genres)?.filter(g => g.trim() !== '').slice(0, 4).map(genre => (
-                    <span key={genre} className="mini-tag">{genre}</span>
-                  ))}
-                  {game.hasSelectiveDownload && <span className="mini-tag selective">Selective DL</span>}
-                  {game.dlcCount > 0 && <span className="mini-tag dlc">+{game.dlcCount} DLC</span>}
-                </div>
-                <a href={game.repackUrl} target="_blank" rel="noopener noreferrer" className="action-btn" onClick={(e) => { e.stopPropagation(); }}>GET REPACK</a>
-              </div>
-            </div>
+            <GameCard 
+              key={game.id}
+              game={game}
+              status={status}
+              searchTerm={searchTerm}
+              onClick={setSelectedGame}
+            />
           );
         })}
       </div>
 
       <div className="bottom-pagination">
-        {renderPagination()}
+        <Pagination 
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+        />
       </div>
 
       {selectedGame && <GameSidePanel game={selectedGame} onClose={() => setSelectedGame(null)} />}
@@ -481,10 +361,29 @@ export default function GameGrid() {
           
           .results-info { flex-direction: column; align-items: flex-start; gap: 1rem; }
           .legend { flex-wrap: wrap; }
-          .search-container { padding: 0.5rem 1rem; }
-          .search-icon { margin-right: 0.75rem; width: 16px; }
+          
+          .search-container { 
+            flex-wrap: wrap; 
+            border-radius: 16px; 
+            padding: 0.75rem; 
+            gap: 0.5rem;
+          }
+          .search-icon { margin-right: 0.5rem; width: 18px; }
+          .search-container input { min-width: 0; font-size: 0.9rem; flex-basis: 60%; }
+          .search-container input::placeholder { 
+            color: rgba(255, 255, 255, 0.2); 
+            font-size: 0.8rem;
+          }
+          
+          .sort-box { border-left: none; padding: 0; flex-grow: 1; justify-content: flex-end; }
+          .sort-box select { font-size: 0.65rem; padding: 0.2rem 0.4rem; }
+          
+          .nsfw-toggle { border-left: none; padding: 0; gap: 0.4rem; }
+          .nsfw-toggle span { display: none; }
+          .nsfw-badge { font-size: 0.55rem; padding: 0.15rem 0.4rem; }
+          
           .search-hero h1 { font-size: 2rem; text-align: center; }
-          .search-container input::placeholder { color: transparent; }
+          .clear-btn { margin-left: auto; }
         }
 
         .empty-state {

@@ -119,6 +119,8 @@ export default function Scanner() {
             <h2>Rig Configuration</h2>
             <p>Select your hardware or auto-detect GPU & RAM.</p>
           </div>
+          {/* Auto-detect hidden as requested, but logic preserved in code */}
+          {/* 
           <button className="auto-detect-btn" onClick={() => {
             const result = runAutoDetect();
             if (result?.gpu && result?.ram) {
@@ -134,6 +136,7 @@ export default function Scanner() {
           }}>
             <Zap size={16} /> Auto-Detect
           </button>
+          */}
         </div>
         {detectToast && <div className="detect-toast">{detectToast}</div>}
       </div>
@@ -204,16 +207,7 @@ export default function Scanner() {
         .rig-header p { font-size: 0.9rem; color: var(--text-secondary); }
 
         .auto-detect-btn {
-          display: flex; align-items: center; gap: 0.5rem;
-          padding: 0.6rem 1.2rem;
-          background: linear-gradient(135deg, rgba(161, 204, 42, 0.15), rgba(161, 204, 42, 0.05));
-          border: 1px solid rgba(161, 204, 42, 0.3);
-          border-radius: 8px;
-          color: var(--accent);
-          font-weight: 700; font-size: 0.8rem;
-          cursor: pointer;
-          transition: all 0.2s;
-          white-space: nowrap;
+          display: none !important;
         }
         .auto-detect-btn:hover {
           background: linear-gradient(135deg, rgba(161, 204, 42, 0.3), rgba(161, 204, 42, 0.1));

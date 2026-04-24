@@ -48,6 +48,30 @@ I built this project because I had three specific problems when using FitGirl re
 
 ---
 
+### Recent Updates
+
+*   **Modular Architecture Refactor**: Split the monolithic `GameGrid` into focused sub-components (`SearchBar`, `TagCloud`, `GameCard`, `Pagination`) to drastically reduce client-side lag and improve code maintainability.
+- **Vastly Expanded Hardware Database**: Added over 100 new CPU and GPU models including the latest **NVIDIA RTX 50 Series**, **AMD Ryzen 9000 (Zen 5)**, **Intel Core Ultra (Arrow Lake)**, and **AMD RX 8000** series.
+- **UI & Iconography Overhaul**: Replaced all legacy emojis with Lucide icons and refined the mobile navigation menu with solid backgrounds and improved accessibility.
+
+---
+
+### Files & Functions
+
+| File | Function |
+| :--- | :--- |
+| `app/page.js` | Main entry point; orchestrates the core layout and components. |
+| `components/GameGrid.js` | The central data hub; handles filtering, sorting, and pagination. |
+| `components/Scanner.js` | Hardware selection interface; allows users to configure their rig. |
+| `components/GameSidePanel.js` | Detailed game view; displays full specs and compatibility explanations. |
+| `components/SearchBar.js` | Search and filtering UI logic. |
+| `components/GameCard.js` | Modular component for individual repack displays. |
+| `utils/hardware-data.js` | The source of truth for all CPU/GPU tiers and models. |
+| `utils/hardware-tiers.js` | The scoring engine logic for compatibility calculation. |
+| `hooks/useScanner.js` | Custom hook for managing persistent local storage of user specs. |
+
+---
+
 ### Legal Disclaimer
 
 > FitCheck is an independent, third-party hardware compatibility tool. It is not affiliated with, endorsed by, sponsored by, or in any way officially connected to FitGirl, FitGirl Repacks, Valve Corporation (Steam), or any game publisher, developer, or rights holder.

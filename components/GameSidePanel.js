@@ -115,7 +115,7 @@ export default function GameSidePanel({ game, onClose }) {
             inset: 0;
             background: rgba(0,0,0,0.6);
             backdrop-filter: blur(4px);
-            z-index: 999;
+            z-index: 10000;
             animation: fadeIn 0.3s ease;
           }
           
@@ -127,7 +127,7 @@ export default function GameSidePanel({ game, onClose }) {
             width: 100%;
             max-width: 450px;
             background: #111;
-            z-index: 1000;
+            z-index: 10001;
             border-left: 1px solid var(--border);
             border-radius: 0;
             animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
