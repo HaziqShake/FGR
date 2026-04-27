@@ -43,25 +43,72 @@ export default function Scanner() {
   };
 
   const renderNestedDropdown = (type, data) => {
-    // Grouping by brand for the first level
+    const term = searchTerm.toLowerCase().trim();
+
+    // ── Search mode: flat results list across all series ─────────────────────
+    if (term) {
+      const matches = [];
+      data.forEach(series => {
+        series.models.forEach(model => {
+          if (model.name.toLowerCase().includes(term)) {
+            matches.push({ model, series: series.series, brand: series.brand });
+          }
+        });
+      });
+
+      return (
+        <div className="modrinth-dropdown glass animate-in">
+          <div className="dropdown-search">
+            <Search size={14} />
+            <input
+              autoFocus
+              placeholder={`Search ${type.toUpperCase()}s...`}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <div className="dropdown-list">
+            {matches.length === 0 ? (
+              <div className="search-empty">No results for &ldquo;{searchTerm}&rdquo;</div>
+            ) : (
+              <div className="models-grid p-2">
+                {matches.map(({ model, series }) => (
+                  <button
+                    key={model.name}
+                    className={`model-btn ${specs?.[type] === model.name ? 'selected' : ''}`}
+                    onClick={() => selectHardware(type, model)}
+                  >
+                    <span>{model.name}</span>
+                    <span className="model-series-label">{series}</span>
+                    {specs?.[type] === model.name && <Check size={12} />}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // ── Browse mode: nested brand → series → model hierarchy ─────────────────
     const brands = [...new Set(data.map(d => d.brand))];
-    
+
     return (
       <div className="modrinth-dropdown glass animate-in">
         <div className="dropdown-search">
           <Search size={14} />
-          <input 
+          <input
             autoFocus
-            placeholder={`Search ${type.toUpperCase()}s...`} 
+            placeholder={`Search ${type.toUpperCase()}s...`}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        
+
         <div className="dropdown-list">
           {brands.map(brand => (
             <div key={brand} className="brand-section">
-              <button 
+              <button
                 className={`brand-header ${activeBrand === brand ? 'active' : ''}`}
                 onClick={() => setActiveBrand(activeBrand === brand ? null : brand)}
               >
@@ -73,7 +120,7 @@ export default function Scanner() {
                 <div className="series-list">
                   {data.filter(d => d.brand === brand).map(series => (
                     <div key={series.series} className="series-item">
-                      <button 
+                      <button
                         className={`series-header ${activeSeries === series.series ? 'active' : ''}`}
                         onClick={() => setActiveSeries(activeSeries === series.series ? null : series.series)}
                       >
@@ -82,10 +129,8 @@ export default function Scanner() {
 
                       {activeSeries === series.series && (
                         <div className="models-grid">
-                          {series.models
-                            .filter(m => m.name.toLowerCase().includes(searchTerm.toLowerCase()))
-                            .map(model => (
-                            <button 
+                          {series.models.map(model => (
+                            <button
                               key={model.name}
                               className={`model-btn ${specs?.[type] === model.name ? 'selected' : ''}`}
                               onClick={() => selectHardware(type, model)}
@@ -94,9 +139,8 @@ export default function Scanner() {
                               {specs?.[type] === model.name && <Check size={12} />}
                             </button>
                           ))}
-                          {/* Manual Fallback inside series */}
                           <button className="model-btn custom" onClick={() => selectHardware(type, { name: 'Custom / Other', tier: 5 })}>
-                             <span>Custom / Other</span>
+                            <span>Custom / Other</span>
                           </button>
                         </div>
                       )}
@@ -373,6 +417,22 @@ export default function Scanner() {
         .model-btn.selected { border-color: var(--accent); color: var(--accent); background: rgba(161, 204, 42, 0.15); box-shadow: 0 4px 15px rgba(161, 204, 42, 0.1); }
         .model-btn.custom { border-style: dashed; opacity: 0.6; }
         .model-btn.custom:hover { opacity: 1; border-style: solid; }
+        .model-series-label {
+          display: block;
+          font-size: 0.65rem;
+          font-weight: 500;
+          color: var(--text-secondary);
+          margin-top: 2px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .search-empty {
+          padding: 2rem;
+          text-align: center;
+          color: var(--text-secondary);
+          font-size: 0.85rem;
+        }
 
         .p-2 { padding: 1rem !important; }
 

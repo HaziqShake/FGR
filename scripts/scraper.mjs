@@ -267,14 +267,13 @@ async function runScraper(maxPages = null) {
   if (!maxPages) {
     try {
       await page.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: 30000 });
-      // Robust detection: Look for the last number in the pagination
-      const pages = await page.$$eval('.page-numbers', els => 
+      const pages = await page.$$eval('.page-numbers', els =>
         els.map(el => parseInt(el.innerText)).filter(n => !isNaN(n))
       );
-      maxPages = Math.max(...pages, 800); // Default to at least 800 if anything fails
+      maxPages = Math.max(...pages, 800);
       console.log(`📡 Detected Total Library Depth: ${maxPages} pages`);
     } catch (e) {
-      maxPages = 800; // Hard fallback
+      maxPages = 800;
       console.log(`📡 Failed to detect pages, falling back to ${maxPages}`);
     }
   }
@@ -286,10 +285,10 @@ async function runScraper(maxPages = null) {
     try {
       const state = JSON.parse(fs.readFileSync(STATE_FILE, 'utf-8'));
       if (state.lastPage && state.lastPage < maxPages) {
-        startPage = state.lastPage + 1; // Start with the next page
+        startPage = state.lastPage + 1;
         console.log(`⏯  Resuming from Page ${startPage}...`);
-      } else if (state.lastPage >= maxPages) {
-        console.log(`🏁 State file says we already reached page ${state.lastPage}. Starting fresh from Page 1.`);
+      } else {
+        console.log(`🏁 Already reached end. Starting fresh from Page 1.`);
       }
     } catch (e) {
       console.warn('⚠️ Failed to read state file, starting from Page 1.');
@@ -326,8 +325,7 @@ async function runScraper(maxPages = null) {
     } catch (pageErr) {
       console.error(`Failed to load index page ${i}:`, pageErr.message);
     }
-    
-    // Save state after completing the page
+
     fs.writeFileSync(STATE_FILE, JSON.stringify({ lastPage: i }));
   }
 
@@ -335,4 +333,83 @@ async function runScraper(maxPages = null) {
   console.log('\n--- FULL LIBRARY SYNC COMPLETE ---');
 }
 
-runScraper();
+/**
+ * Incremental sync: scrapes newest pages first (page 1, 2, 3…) and stops
+ * as soon as every slug on a page already exists in Firestore.
+ * Run with:  node scripts/scraper.mjs --new-only
+ */
+async function runNewOnly() {
+  const browser = await chromium.launch({ headless: true });
+  const page = await browser.newPage();
+
+  // Detect how many pages exist so we have an upper bound
+  let maxPages = 800;
+  try {
+    await page.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: 30000 });
+    const pages = await page.$$eval('.page-numbers', els =>
+      els.map(el => parseInt(el.innerText)).filter(n => !isNaN(n))
+    );
+    maxPages = Math.max(...pages, 800);
+    console.log(`📡 Total pages detected: ${maxPages}`);
+  } catch (e) {
+    console.log(`📡 Could not detect page count, using ${maxPages}`);
+  }
+
+  console.log('🆕 New-only mode: scanning newest pages first, stopping when no new repacks found.\n');
+
+  for (let i = 1; i <= maxPages; i++) {
+    const pageUrl = i === 1 ? BASE_URL : `${BASE_URL}/page/${i}/`;
+    console.log(`\n--- Checking Page ${i} (newest first) ---`);
+
+    let links = [];
+    try {
+      await page.goto(pageUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
+      links = await page.$$eval('h1.entry-title a', anchors => anchors.map(a => a.href));
+    } catch (pageErr) {
+      console.error(`Failed to load page ${i}:`, pageErr.message);
+      continue;
+    }
+
+    let newOnThisPage = 0;
+
+    for (const link of links) {
+      // Derive slug without loading the page first for a quick existence check
+      const slug = link.split('/').filter(Boolean).pop();
+      const gamesRef = collection(db, 'games');
+      const q = query(gamesRef, where('slug', '==', slug));
+      const snap = await getDocs(q);
+
+      if (!snap.empty) {
+        // Already in DB — skip scraping this one
+        console.log(`[EXISTS] ${slug}`);
+        continue;
+      }
+
+      // New slug — scrape the full details
+      const gameData = await scrapeGameDetails(page, link);
+      if (gameData) {
+        await addDoc(gamesRef, gameData);
+        console.log(`[NEW] ${gameData.title}`);
+        newOnThisPage++;
+      }
+      await wait(DELAY_MS);
+    }
+
+    if (newOnThisPage === 0) {
+      // Every slug on this page was already in the DB → nothing newer exists
+      console.log(`\n✅ Page ${i} had no new repacks. All caught up!`);
+      break;
+    }
+  }
+
+  await browser.close();
+  console.log('\n--- INCREMENTAL SYNC COMPLETE ---');
+}
+
+// ─── Entry point ─────────────────────────────────────────────────────────────
+if (process.argv.includes('--new-only')) {
+  runNewOnly();
+} else {
+  runScraper();
+}
+
