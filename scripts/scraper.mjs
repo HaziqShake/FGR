@@ -11,6 +11,7 @@ const STATE_FILE = path.resolve('scraper-state.json');
 const BASE_URL = 'https://fitgirl-repacks.site';
 const DELAY_MS = 1500;       // Delay between FitGirl page loads
 const STEAM_DELAY_MS = 2000; // Delay between Steam API calls
+const REFRESH_PAGES = 5;     // Pages always re-scraped on --new-only runs (to catch edits like hypervisor removals)
 
 const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -355,7 +356,12 @@ async function runNewOnly() {
     console.log(`📡 Could not detect page count, using ${maxPages}`);
   }
 
-  console.log('🆕 New-only mode: scanning newest pages first, stopping when no new repacks found.\n');
+  // Allow --refresh=N to override REFRESH_PAGES for this run
+  const refreshArg = process.argv.find(a => a.startsWith('--refresh='));
+  const refreshPages = refreshArg ? parseInt(refreshArg.split('=')[1]) : REFRESH_PAGES;
+
+  console.log('🆕 New-only mode: scanning newest pages first, stopping when no new repacks found.');
+  console.log(`🔄 Pages 1–${refreshPages} will always be fully re-scraped to catch updated repacks (e.g. hypervisor removals).\n`);
 
   for (let i = 1; i <= maxPages; i++) {
     const pageUrl = i === 1 ? BASE_URL : `${BASE_URL}/page/${i}/`;
@@ -373,19 +379,40 @@ async function runNewOnly() {
     let newOnThisPage = 0;
 
     for (const link of links) {
-      // Derive slug without loading the page first for a quick existence check
       const slug = link.split('/').filter(Boolean).pop();
       const gamesRef = collection(db, 'games');
       const q = query(gamesRef, where('slug', '==', slug));
       const snap = await getDocs(q);
 
+      // ── Pages 1–refreshPages: always re-scrape to catch edits ────────────
+      if (i <= refreshPages) {
+        const gameData = await scrapeGameDetails(page, link);
+        if (gameData) {
+          if (snap.empty) {
+            await addDoc(gamesRef, gameData);
+            console.log(`[NEW] ${gameData.title}`);
+            newOnThisPage++;
+          } else {
+            const existingDoc = snap.docs[0];
+            const prev = existingDoc.data();
+            if (prev.isHypervisor !== gameData.isHypervisor) {
+              console.log(`[HYPER-CHANGE] ${gameData.title}: isHypervisor ${prev.isHypervisor} → ${gameData.isHypervisor}`);
+            }
+            await updateDoc(doc(db, 'games', existingDoc.id), gameData);
+            console.log(`[UPD] ${gameData.title}`);
+          }
+        }
+        await wait(DELAY_MS);
+        continue;
+      }
+
+      // ── Pages 2+: fast path — skip if already in DB ───────────────────────
       if (!snap.empty) {
-        // Already in DB — skip scraping this one
         console.log(`[EXISTS] ${slug}`);
         continue;
       }
 
-      // New slug — scrape the full details
+      // New slug on pages 2+ — scrape and add
       const gameData = await scrapeGameDetails(page, link);
       if (gameData) {
         await addDoc(gamesRef, gameData);
@@ -395,8 +422,8 @@ async function runNewOnly() {
       await wait(DELAY_MS);
     }
 
-    if (newOnThisPage === 0) {
-      // Every slug on this page was already in the DB → nothing newer exists
+    // Only apply the early-exit logic beyond the refresh window
+    if (i > refreshPages && newOnThisPage === 0) {
       console.log(`\n✅ Page ${i} had no new repacks. All caught up!`);
       break;
     }
