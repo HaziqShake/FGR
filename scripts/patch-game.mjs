@@ -3,8 +3,8 @@ import { db } from '../lib/firebase.js';
 import { collection, query, where, getDocs, updateDoc, doc } from 'firebase/firestore';
 
 // ── Config ────────────────────────────────────────────────────────────────────
-// const TITLE_SEARCH = process.argv[2] || 'resident evil requiem';
-// const OVERRIDES = {};
+const TITLE_SEARCH = process.argv[2] || '';
+const OVERRIDES = {};
 
 for (const arg of process.argv.slice(3)) {
   const [key, raw] = arg.split('=');
