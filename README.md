@@ -50,9 +50,26 @@ I built this project because I had three specific problems when using FitGirl re
 
 ### Recent Updates
 
-*   **Modular Architecture Refactor**: Split the monolithic `GameGrid` into focused sub-components (`SearchBar`, `TagCloud`, `GameCard`, `Pagination`) to drastically reduce client-side lag and improve code maintainability.
-- **Vastly Expanded Hardware Database**: Added over 100 new CPU and GPU models including the latest **NVIDIA RTX 50 Series**, **AMD Ryzen 9000 (Zen 5)**, **Intel Core Ultra (Arrow Lake)**, and **AMD RX 8000** series.
+- **Modular Architecture Refactor**: Split the monolithic `GameGrid` into focused sub-components (`SearchBar`, `TagCloud`, `GameCard`, `Pagination`) to drastically reduce client-side lag and improve code maintainability.
 - **UI & Iconography Overhaul**: Replaced all legacy emojis with Lucide icons and refined the mobile navigation menu with solid backgrounds and improved accessibility.
+
+#### Hardware Database Overhaul
+
+- **Massively expanded CPU coverage**: Intel now spans **6th gen (Skylake) through 14th gen (Raptor Lake Refresh) and Core Ultra 200 (Arrow Lake)**, with every generation broken out by product line (i9/i7/i5/i3). AMD coverage now runs from **Ryzen 1000 (Zen 1) through Ryzen 9000 (Zen 5)**, including all X3D variants, mobile H/HX/HS chips, and APU-only G-series parts.
+- **Added missing laptop CPU families**: U-series ultrabook CPUs (6th–8th gen), H-series gaming laptop CPUs (9th gen), and modern mobile lines (Ryzen Mobile, Core Ultra H) were entirely absent and are now included.
+- **Purged fabricated SKUs**: Removed CPU model numbers that don't exist in the real world — including `Ryzen 9 7900X3D` (AMD never shipped this), plain-F suffix i9 variants (`i9-14900F`, `i9-13900F`, `i9-12900F`), non-existent i7 F-variants (`i7-14700F`, `i7-13700F`, `i7-9700F`), and other hallucinated SKUs.
+- **Expanded GPU coverage**: Added **GTX 900 Series**, **GTX 700 Series**, **NVIDIA MX laptop GPUs** (MX150–MX570), **AMD RX 5000 / 500 / 400 Series**, **Vega 56/64**, and the **R9/R7 legacy** lineup.
+- **Rebuilt integrated graphics section**: Split into four groups — AMD APU Modern (Radeon 890M–660M), AMD APU Legacy (Vega 3–11 from Ryzen 1000–4000 era), Intel Arc & Iris (modern), and Intel UHD/HD Legacy (UHD 630 down to HD 4000).
+
+#### Search & UX
+
+- **Global search across all hardware**: The CPU/GPU dropdown search now queries every brand and series simultaneously. Typing a partial model number (e.g. `8265U`, `3070`, `5600`) instantly surfaces all matches in a flat results list — no need to drill through brand → series → model first. Each result card shows its series as a subtitle for context. An empty-state message is shown when no results match.
+
+#### Scraper & Automation
+
+- **Incremental sync mode (`--new-only`)**: Added a new scraper mode that starts from the newest FitGirl page and stops automatically the moment it hits a slug already in the database. This means catching up on new repacks takes seconds instead of re-crawling all 800+ pages.
+- **GitHub Actions automation**: The scraper now runs automatically every day at midnight UTC via a GitHub Actions workflow (`.github/workflows/scraper.yml`). It installs Playwright, writes credentials from repository secrets, and runs the incremental sync — no manual intervention needed.
+- **New npm scripts**: `npm run scraper` (full crawl), `npm run scraper:resume` (resume interrupted crawl), `npm run scraper:new` (incremental, new repacks only).
 
 ---
 
