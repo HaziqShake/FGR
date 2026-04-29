@@ -4,9 +4,9 @@
  */
 
 export const GPU_DATA = [
-  { brand: 'NVIDIA', series: 'RTX 50 Series (Next-Gen)', models: [
+  { brand: 'NVIDIA', series: 'RTX 50 Series (Blackwell)', models: [
     { name: 'RTX 5090', tier: 10 }, { name: 'RTX 5080', tier: 10 },
-    { name: 'RTX 5070', tier: 9 }
+    { name: 'RTX 5070 Ti', tier: 9 }, { name: 'RTX 5070', tier: 9 }
   ]},
   { brand: 'NVIDIA', series: 'RTX 40 Series', models: [
     { name: 'RTX 4090', tier: 10 }, { name: 'RTX 4080 Super', tier: 10 },
@@ -54,9 +54,8 @@ export const GPU_DATA = [
     { name: 'MX450', tier: 3 }, { name: 'MX350', tier: 2 },
     { name: 'MX250', tier: 2 }, { name: 'MX150', tier: 2 }
   ]},
-  { brand: 'AMD', series: 'RX 8000 Series (RDNA 4)', models: [
-    { name: 'RX 8800 XT', tier: 9 }, { name: 'RX 8700 XT', tier: 8 },
-    { name: 'RX 8600 XT', tier: 7 }
+  { brand: 'AMD', series: 'RX 9000 Series (RDNA 4)', models: [
+    { name: 'RX 9070 XT', tier: 9 }, { name: 'RX 9070', tier: 8 }
   ]},
   { brand: 'AMD', series: 'RX 7000 Series', models: [
     { name: 'RX 7900 XTX', tier: 10 }, { name: 'RX 7900 XT', tier: 10 },
@@ -109,8 +108,8 @@ export const GPU_DATA = [
     { name: 'AMD Radeon 780M', tier: 3 }, { name: 'AMD Radeon 760M', tier: 3 },
     { name: 'AMD Radeon 680M', tier: 3 }, { name: 'AMD Radeon 660M', tier: 2 }
   ]},
-  { brand: 'Integrated', series: 'AMD APU Graphics (Legacy)', models: [
-    { name: 'AMD Radeon Vega 11', tier: 2 }, { name: 'AMD Radeon Vega 10', tier: 2 },
+  { brand: 'Integrated', series: 'AMD APU Graphics (Legacy Vega)', models: [
+    { name: 'AMD Radeon Vega 11', tier: 2 }, { name: 'AMD Radeon RX Vega 10', tier: 2 },
     { name: 'AMD Radeon Vega 8', tier: 2 }, { name: 'AMD Radeon Vega 6', tier: 1 },
     { name: 'AMD Radeon Vega 3', tier: 1 }
   ]},
@@ -154,12 +153,13 @@ export const CPU_DATA = [
   { brand: 'Intel', series: '14th Gen (Raptor Lake Refresh) i7', models: [
     { name: 'i7-14700K', tier: 9 }, { name: 'i7-14700KF', tier: 9 },
     { name: 'i7-14700', tier: 8 },
-    { name: 'i7-14700HX', tier: 8 }
+    { name: 'i7-14700HX', tier: 8 }, { name: 'i7-14650HX', tier: 8 }
   ]},
 
   { brand: 'Intel', series: '14th Gen (Raptor Lake Refresh) i5', models: [
     { name: 'i5-14600K', tier: 8 }, { name: 'i5-14600KF', tier: 8 },
-    { name: 'i5-14500', tier: 7 }, { name: 'i5-14400', tier: 7 }, { name: 'i5-14400F', tier: 7 }
+    { name: 'i5-14500', tier: 7 }, { name: 'i5-14400', tier: 7 }, { name: 'i5-14400F', tier: 7 },
+    { name: 'i5-14500HX', tier: 7 }
   ]},
 
   { brand: 'Intel', series: '14th Gen (Raptor Lake Refresh) i3', models: [
@@ -169,19 +169,19 @@ export const CPU_DATA = [
   { brand: 'Intel', series: '13th Gen (Raptor Lake) i9', models: [
     { name: 'i9-13900KS', tier: 10 }, { name: 'i9-13900K', tier: 10 }, { name: 'i9-13900KF', tier: 10 },
     { name: 'i9-13900', tier: 9 },
-    { name: 'i9-13900HX', tier: 9 }
+    { name: 'i9-13900HX', tier: 9 }, { name: 'i9-13950HX', tier: 10 }
   ]},
 
   { brand: 'Intel', series: '13th Gen (Raptor Lake) i7', models: [
     { name: 'i7-13700K', tier: 9 }, { name: 'i7-13700KF', tier: 9 },
     { name: 'i7-13700', tier: 8 },
-    { name: 'i7-13700HX', tier: 8 }, { name: 'i7-13700H', tier: 7 }
+    { name: 'i7-13700HX', tier: 8 }, { name: 'i7-13650HX', tier: 8 }, { name: 'i7-13700H', tier: 7 }
   ]},
 
   { brand: 'Intel', series: '13th Gen (Raptor Lake) i5', models: [
     { name: 'i5-13600K', tier: 8 }, { name: 'i5-13600KF', tier: 8 },
     { name: 'i5-13500', tier: 7 }, { name: 'i5-13400', tier: 7 }, { name: 'i5-13400F', tier: 7 },
-    { name: 'i5-13600H', tier: 7 }, { name: 'i5-13500HX', tier: 7 }
+    { name: 'i5-13600H', tier: 7 }, { name: 'i5-13500HX', tier: 7 }, { name: 'i5-13420H', tier: 6 }
   ]},
 
   { brand: 'Intel', series: '13th Gen (Raptor Lake) i3', models: [
@@ -190,19 +190,20 @@ export const CPU_DATA = [
 
   { brand: 'Intel', series: '12th Gen (Alder Lake) i9', models: [
     { name: 'i9-12900KS', tier: 9 }, { name: 'i9-12900K', tier: 9 }, { name: 'i9-12900KF', tier: 9 },
-    { name: 'i9-12900', tier: 8 }
+    { name: 'i9-12900', tier: 8 },
+    { name: 'i9-12950HX', tier: 9 }
   ]},
 
   { brand: 'Intel', series: '12th Gen (Alder Lake) i7', models: [
     { name: 'i7-12700K', tier: 8 }, { name: 'i7-12700KF', tier: 8 },
     { name: 'i7-12700F', tier: 8 }, { name: 'i7-12700', tier: 8 },
-    { name: 'i7-12700H', tier: 7 }, { name: 'i7-12800HX', tier: 7 }
+    { name: 'i7-12700H', tier: 7 }, { name: 'i7-12800HX', tier: 7 }, { name: 'i7-12850HX', tier: 8 }
   ]},
 
   { brand: 'Intel', series: '12th Gen (Alder Lake) i5', models: [
     { name: 'i5-12600K', tier: 7 }, { name: 'i5-12600KF', tier: 7 },
     { name: 'i5-12500', tier: 6 }, { name: 'i5-12400', tier: 6 }, { name: 'i5-12400F', tier: 6 },
-    { name: 'i5-12500H', tier: 6 }
+    { name: 'i5-12500H', tier: 6 }, { name: 'i5-12600HX', tier: 7 }, { name: 'i5-12450HX', tier: 6 }
   ]},
 
   { brand: 'Intel', series: '12th Gen (Alder Lake) i3', models: [
