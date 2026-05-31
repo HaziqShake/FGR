@@ -54,6 +54,20 @@ export const GPU_DATA = [
     { name: 'MX450', tier: 3 }, { name: 'MX350', tier: 2 },
     { name: 'MX250', tier: 2 }, { name: 'MX150', tier: 2 }
   ]},
+  { brand: 'NVIDIA', series: 'RTX Laptop GPUs', models: [
+    { name: 'RTX 4090 Laptop', tier: 9 }, { name: 'RTX 4080 Laptop', tier: 8 },
+    { name: 'RTX 4070 Laptop', tier: 7 }, { name: 'RTX 4060 Laptop', tier: 6 },
+    { name: 'RTX 4050 Laptop', tier: 5 }, { name: 'RTX 3080 Ti Laptop', tier: 8 },
+    { name: 'RTX 3080 Laptop', tier: 7 }, { name: 'RTX 3070 Ti Laptop', tier: 7 },
+    { name: 'RTX 3070 Laptop', tier: 6 }, { name: 'RTX 3060 Laptop', tier: 5 },
+    { name: 'RTX 3050 Ti Laptop', tier: 4 }, { name: 'RTX 3050 Laptop', tier: 3 },
+    { name: 'RTX 2050 Laptop', tier: 3 }
+  ]},
+  { brand: 'NVIDIA', series: 'GTX Laptop GPUs', models: [
+    { name: 'GTX 1660 Ti Laptop', tier: 4 }, { name: 'GTX 1650 Ti Laptop', tier: 3 },
+    { name: 'GTX 1650 Laptop', tier: 3 }, { name: 'GTX 1060 Laptop', tier: 3 },
+    { name: 'GTX 1050 Ti Laptop', tier: 3 }, { name: 'GTX 1050 Laptop', tier: 2 }
+  ]},
   { brand: 'AMD', series: 'RX 9000 Series (RDNA 4)', models: [
     { name: 'RX 9070 XT', tier: 9 }, { name: 'RX 9070', tier: 8 }
   ]},
@@ -94,6 +108,13 @@ export const GPU_DATA = [
     { name: 'R9 380X', tier: 4 }, { name: 'R9 380', tier: 3 },
     { name: 'R9 270X', tier: 3 }, { name: 'R7 370', tier: 3 },
     { name: 'R7 360', tier: 2 }
+  ]},
+  { brand: 'AMD', series: 'Radeon Laptop GPUs', models: [
+    { name: 'Radeon RX 7900M', tier: 9 }, { name: 'Radeon RX 7600M XT', tier: 6 },
+    { name: 'Radeon RX 7600M', tier: 5 }, { name: 'Radeon RX 7600S', tier: 5 },
+    { name: 'Radeon RX 6850M XT', tier: 7 }, { name: 'Radeon RX 6800M', tier: 7 },
+    { name: 'Radeon RX 6700M', tier: 6 }, { name: 'Radeon RX 6600M', tier: 5 },
+    { name: 'Radeon RX 6800S', tier: 6 }, { name: 'Radeon RX 6700S', tier: 5 }
   ]},
   { brand: 'Intel', series: 'Arc B-Series (Battlemage)', models: [
     { name: 'Arc B580', tier: 6 }, { name: 'Arc B570', tier: 5 }
@@ -333,9 +354,20 @@ export const CPU_DATA = [
     { name: 'Ryzen 9 9955HX', tier: 9 }, { name: 'Ryzen 7 9850HX', tier: 8 }
   ]},
 
-  { brand: 'AMD', series: 'Ryzen 7000 X3D (Zen 4 Gaming)', models: [
-    { name: 'Ryzen 9 7950X3D', tier: 10 },
-    { name: 'Ryzen 7 7800X3D', tier: 10 }
+  { brand: 'AMD', series: 'Ryzen X3D Gaming Series (Desktop)', models: [
+    { name: 'Ryzen 7 9800X3D', tier: 10 }, { name: 'Ryzen 9 7950X3D', tier: 10 },
+    { name: 'Ryzen 7 7800X3D', tier: 10 }, { name: 'Ryzen 7 5800X3D', tier: 9 }
+  ]},
+
+  { brand: 'AMD', series: 'Ryzen 8000 Series (Hawk Point APUs)', models: [
+    { name: 'Ryzen 7 8700G', tier: 7 }, { name: 'Ryzen 5 8600G', tier: 6 },
+    { name: 'Ryzen 5 8500G', tier: 5 }
+  ]},
+
+  { brand: 'AMD', series: 'Ryzen 8000 Mobile (Hawk Point)', models: [
+    { name: 'Ryzen 7 8845HS', tier: 8 }, { name: 'Ryzen 7 8840HS', tier: 7 },
+    { name: 'Ryzen 5 8645HS', tier: 7 }, { name: 'Ryzen 5 8640HS', tier: 6 },
+    { name: 'Ryzen 7 8840U', tier: 6 }, { name: 'Ryzen 5 8640U', tier: 5 }
   ]},
 
   { brand: 'AMD', series: 'Ryzen 7000 Series (Zen 4)', models: [
@@ -349,10 +381,6 @@ export const CPU_DATA = [
     { name: 'Ryzen 9 7945HX', tier: 9 }, { name: 'Ryzen 9 7940HX', tier: 9 },
     { name: 'Ryzen 7 7745HX', tier: 8 }, { name: 'Ryzen 7 7740H', tier: 7 },
     { name: 'Ryzen 5 7640H', tier: 6 }, { name: 'Ryzen 5 7535H', tier: 6 }
-  ]},
-
-  { brand: 'AMD', series: 'Ryzen 5000 X3D (Zen 3)', models: [
-    { name: 'Ryzen 7 5800X3D', tier: 9 }
   ]},
 
   { brand: 'AMD', series: 'Ryzen 5000 Series (Zen 3)', models: [

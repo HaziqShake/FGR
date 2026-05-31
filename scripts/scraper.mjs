@@ -1,7 +1,6 @@
 import './init-env.js';
 import { chromium } from 'playwright';
-import { db } from '../lib/firebase.js';
-import { collection, addDoc, query, where, getDocs, updateDoc, doc } from 'firebase/firestore';
+import { db } from '../lib/firebase-admin.js';
 import { getGPUTier, getCPUTier } from '../utils/hardware-tiers.js';
 import fs from 'fs';
 import path from 'path';
@@ -208,7 +207,10 @@ async function scrapeGameDetails(page, url) {
     const hasSelectiveDownload = /selective download/i.test(content);
 
     // ── Hypervisor / VM Detection ─────────────────────────────────────────────
-    const isHypervisor = /hypervisor/i.test(title) || /hypervisor/i.test(content);
+    // Only check the title and the first 5 lines of the content (the FitGirl post header)
+    // to avoid matching discussions of hypervisor clean/bypass utilities in the body of updated non-HV repacks.
+    const firstFewLines = content.split('\n').slice(0, 5).join('\n');
+    const isHypervisor = /hypervisor/i.test(title) || /hypervisor/i.test(firstFewLines);
     const isUpdatesDigest = /updates digest/i.test(title);
     const isNonGame = 
       !imageUrl ||
@@ -296,35 +298,42 @@ async function runScraper(maxPages = null) {
     }
   }
 
+  let consecutiveFailures = 0;
   for (let i = startPage; i <= maxPages; i++) {
     const pageUrl = i === 1 ? BASE_URL : `${BASE_URL}/page/${i}/`;
     console.log(`\n--- Indexing Page ${i} / ${maxPages} ---`);
 
+    let links = [];
     try {
       await page.goto(pageUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
-      const links = await page.$$eval('h1.entry-title a', anchors => anchors.map(a => a.href));
-
-      for (const link of links) {
-        const gameData = await scrapeGameDetails(page, link);
-
-        if (gameData) {
-          const gamesRef = collection(db, 'games');
-          const q = query(gamesRef, where('slug', '==', gameData.slug));
-          const querySnapshot = await getDocs(q);
-
-          if (querySnapshot.empty) {
-            await addDoc(gamesRef, gameData);
-            console.log(`[NEW] ${gameData.title}`);
-          } else {
-            const existingDoc = querySnapshot.docs[0];
-            await updateDoc(doc(db, 'games', existingDoc.id), gameData);
-            console.log(`[UPD] ${gameData.title}`);
-          }
-        }
-        await wait(DELAY_MS);
-      }
+      links = await page.$$eval('h1.entry-title a', anchors => anchors.map(a => a.href));
+      consecutiveFailures = 0; // Reset on successful load
     } catch (pageErr) {
-      console.error(`Failed to load index page ${i}:`, pageErr.message);
+      consecutiveFailures++;
+      console.error(`Failed to load index page ${i} (consecutive: ${consecutiveFailures}):`, pageErr.message);
+      if (consecutiveFailures >= 3) {
+        throw new Error(`CRITICAL: 3 consecutive page load failures. We are likely blocked by Cloudflare or the site is down. Exiting to prevent endless timeouts in CI.`);
+      }
+      continue;
+    }
+
+    for (const link of links) {
+      const gameData = await scrapeGameDetails(page, link);
+
+      if (gameData) {
+        const gamesRef = db.collection('games');
+        const querySnapshot = await gamesRef.where('slug', '==', gameData.slug).get();
+
+        if (querySnapshot.empty) {
+          await gamesRef.add(gameData);
+          console.log(`[NEW] ${gameData.title}`);
+        } else {
+          const existingDoc = querySnapshot.docs[0];
+          await existingDoc.ref.update(gameData);
+          console.log(`[UPD] ${gameData.title}`);
+        }
+      }
+      await wait(DELAY_MS);
     }
 
     fs.writeFileSync(STATE_FILE, JSON.stringify({ lastPage: i }));
@@ -340,7 +349,9 @@ async function runScraper(maxPages = null) {
  * Run with:  node scripts/scraper.mjs --new-only
  */
 async function runNewOnly() {
+  console.log('🚀 Launching browser...');
   const browser = await chromium.launch({ headless: true });
+  console.log('✅ Browser launched.');
   const page = await browser.newPage();
 
   // Detect how many pages exist so we have an upper bound
@@ -363,6 +374,7 @@ async function runNewOnly() {
   console.log('🆕 New-only mode: scanning newest pages first, stopping when no new repacks found.');
   console.log(`🔄 Pages 1–${refreshPages} will always be fully re-scraped to catch updated repacks (e.g. hypervisor removals).\n`);
 
+  let consecutiveFailures = 0;
   for (let i = 1; i <= maxPages; i++) {
     const pageUrl = i === 1 ? BASE_URL : `${BASE_URL}/page/${i}/`;
     console.log(`\n--- Checking Page ${i} (newest first) ---`);
@@ -371,8 +383,13 @@ async function runNewOnly() {
     try {
       await page.goto(pageUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
       links = await page.$$eval('h1.entry-title a', anchors => anchors.map(a => a.href));
+      consecutiveFailures = 0; // Reset on successful load
     } catch (pageErr) {
-      console.error(`Failed to load page ${i}:`, pageErr.message);
+      consecutiveFailures++;
+      console.error(`Failed to load page ${i} (consecutive: ${consecutiveFailures}):`, pageErr.message);
+      if (consecutiveFailures >= 3) {
+        throw new Error(`CRITICAL: 3 consecutive page load failures. We are likely blocked by Cloudflare or the site is down. Exiting to prevent endless timeouts in CI.`);
+      }
       continue;
     }
 
@@ -380,16 +397,15 @@ async function runNewOnly() {
 
     for (const link of links) {
       const slug = link.split('/').filter(Boolean).pop();
-      const gamesRef = collection(db, 'games');
-      const q = query(gamesRef, where('slug', '==', slug));
-      const snap = await getDocs(q);
+      const gamesRef = db.collection('games');
+      const snap = await gamesRef.where('slug', '==', slug).get();
 
       // ── Pages 1–refreshPages: always re-scrape to catch edits ────────────
       if (i <= refreshPages) {
         const gameData = await scrapeGameDetails(page, link);
         if (gameData) {
           if (snap.empty) {
-            await addDoc(gamesRef, gameData);
+            await gamesRef.add(gameData);
             console.log(`[NEW] ${gameData.title}`);
             newOnThisPage++;
           } else {
@@ -398,7 +414,7 @@ async function runNewOnly() {
             if (prev.isHypervisor !== gameData.isHypervisor) {
               console.log(`[HYPER-CHANGE] ${gameData.title}: isHypervisor ${prev.isHypervisor} → ${gameData.isHypervisor}`);
             }
-            await updateDoc(doc(db, 'games', existingDoc.id), gameData);
+            await existingDoc.ref.update(gameData);
             console.log(`[UPD] ${gameData.title}`);
           }
         }
@@ -415,7 +431,7 @@ async function runNewOnly() {
       // New slug on pages 2+ — scrape and add
       const gameData = await scrapeGameDetails(page, link);
       if (gameData) {
-        await addDoc(gamesRef, gameData);
+        await gamesRef.add(gameData);
         console.log(`[NEW] ${gameData.title}`);
         newOnThisPage++;
       }

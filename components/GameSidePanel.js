@@ -48,7 +48,9 @@ export default function GameSidePanel({ game, onClose }) {
           <div className="panel-content">
             <div className="header-row">
               <h2>{game.title}</h2>
-              <div className={`status-badge ${status}`}>{status}</div>
+              <div className={`status-badge ${status}`}>
+                {status === 'unknown' ? 'No Specs' : status}
+              </div>
             </div>
 
             <p className="status-desc">{StatusExplanation()}</p>
@@ -222,6 +224,7 @@ export default function GameSidePanel({ game, onClose }) {
           .good { color: var(--accent); border-color: rgba(161, 204, 42, 0.3); background: rgba(161, 204, 42, 0.1); }
           .possible { color: #fbbf24; border-color: rgba(251, 191, 36, 0.3); background: rgba(251, 191, 36, 0.1); }
           .unsupported { color: #f87171; border-color: rgba(248, 113, 113, 0.3); background: rgba(248, 113, 113, 0.1); }
+          .unknown { color: #94a3b8; border-color: rgba(148, 163, 184, 0.3); background: rgba(148, 163, 184, 0.1); }
 
           .status-desc {
             font-size: 0.9rem;

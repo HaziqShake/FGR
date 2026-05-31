@@ -1,6 +1,5 @@
 import './init-env.js';
-import { db } from '../lib/firebase.js';
-import { collection, query, where, getDocs, updateDoc, doc } from 'firebase/firestore';
+import { db } from '../lib/firebase-admin.js';
 
 // ── Config ────────────────────────────────────────────────────────────────────
 const TITLE_SEARCH = process.argv[2] || '';
@@ -17,8 +16,8 @@ for (const arg of process.argv.slice(3)) {
 
 // ── Run ───────────────────────────────────────────────────────────────────────
 async function patch() {
-  const gamesRef = collection(db, 'games');
-  const snap = await getDocs(gamesRef);
+  const gamesRef = db.collection('games');
+  const snap = await gamesRef.get();
 
   const lower = TITLE_SEARCH.toLowerCase();
   const matches = snap.docs.filter(d =>
@@ -37,7 +36,7 @@ async function patch() {
     console.log(`  Current values:`, Object.fromEntries(Object.keys(OVERRIDES).map(k => [k, data[k]])));
     console.log(`  → Applying:`, OVERRIDES);
 
-    await updateDoc(doc(db, 'games', match.id), {
+    await match.ref.update({
       ...OVERRIDES,
       updatedAt: new Date().toISOString(),
     });

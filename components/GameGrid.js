@@ -316,6 +316,7 @@ export default function GameGrid() {
         .game-card.good:hover { box-shadow: 0 0 30px rgba(161, 204, 42, 0.15); border-color: var(--accent); }
         .game-card.possible:hover { box-shadow: 0 0 30px rgba(251, 191, 36, 0.15); border-color: #fbbf24; }
         .game-card.unsupported:hover { box-shadow: 0 0 30px rgba(248, 113, 113, 0.15); border-color: #f87171; }
+        .game-card.unknown:hover { box-shadow: 0 0 30px rgba(148, 163, 184, 0.15); border-color: #94a3b8; }
         
         .image-wrapper { height: 380px; position: relative; overflow: hidden; }
         .poster { width: 100%; height: 100%; object-fit: cover; object-position: center top; display: block; transition: transform 0.5s ease; }
@@ -327,6 +328,7 @@ export default function GameGrid() {
         .good .status-badge { color: var(--accent); border-color: rgba(161, 204, 42, 0.2); }
         .possible .status-badge { color: #fbbf24; border-color: rgba(251, 191, 36, 0.2); }
         .unsupported .status-badge { color: #f87171; border-color: rgba(248, 113, 113, 0.2); }
+        .unknown .status-badge { color: #94a3b8; border-color: rgba(148, 163, 184, 0.2); }
 
         .content { padding: 1.5rem; flex-grow: 1; display: flex; flex-direction: column; }
         .content h3 { font-size: 0.95rem; margin-bottom: 0.75rem; color: #fff; }

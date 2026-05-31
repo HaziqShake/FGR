@@ -1,6 +1,7 @@
 'use client';
 
-import { Monitor } from 'lucide-react';
+import { useState } from 'react';
+import { Monitor, Loader2, Gamepad2 } from 'lucide-react';
 
 const getInitials = (title) => {
   if (!title) return '';
@@ -12,6 +13,7 @@ const getInitials = (title) => {
 };
 
 export default function GameCard({ game, status, searchTerm, onClick }) {
+  const [imgState, setImgState] = useState(game.imageUrl ? 'loading' : 'empty');
   // Highlight search matches
   let titleNode = game.title;
   if (searchTerm) {
@@ -26,13 +28,43 @@ export default function GameCard({ game, status, searchTerm, onClick }) {
   return (
     <div className={`game-card glass ${status}`} onClick={() => onClick(game)}>
       <div className="image-wrapper">
-        {game.imageUrl
-          ? <img src={game.imageUrl} alt={game.title} loading="lazy" className="poster" />
-          : <div className="poster-fallback">{getInitials(game.title)}</div>
-        }
+        {imgState === 'loading' && (
+          <div className="thumbnail-loader">
+            <div className="shimmer-overlay"></div>
+            <div className="spinner-container">
+              <Loader2 className="spinner-icon" size={28} />
+              <span className="loader-text">LOADING...</span>
+            </div>
+          </div>
+        )}
+
+        {(imgState === 'empty' || imgState === 'error') && (
+          <div className="slick-placeholder">
+            <div className="crt-grid"></div>
+            <div className="crt-scanline"></div>
+            <div className="placeholder-initials">{getInitials(game.title)}</div>
+            <div className="placeholder-content">
+              <Gamepad2 className="placeholder-icon" size={32} />
+              <span className="placeholder-status">NO PREVIEW</span>
+            </div>
+          </div>
+        )}
+
+        {game.imageUrl && imgState !== 'error' && (
+          <img 
+            src={game.imageUrl} 
+            alt={game.title} 
+            loading="lazy" 
+            className={`poster ${imgState === 'loaded' ? 'visible' : 'hidden'}`}
+            onLoad={() => setImgState('loaded')}
+            onError={() => setImgState('error')}
+          />
+        )}
       </div>
       <div className="content">
-        <div className={`status-badge ${status}`}>{status}</div>
+        <div className={`status-badge ${status}`}>
+          {status === 'unknown' ? 'No Specs' : status}
+        </div>
         <h3>{titleNode}</h3>
         {/* Real Specs Line from Steam */}
         <div className="specs-line">
