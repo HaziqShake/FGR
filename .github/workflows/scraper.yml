@@ -6,6 +6,11 @@ on:
     - cron: '0 0 * * *'
   # Also allow manual trigger from the GitHub Actions UI
   workflow_dispatch:
+    inputs:
+      since:
+        description: 'Backfill from date (YYYY-MM-DD). Leave blank for normal new-only run.'
+        required: false
+        default: ''
 
 jobs:
   scrape:
@@ -39,4 +44,9 @@ jobs:
           NEXT_PUBLIC_FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
           NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: ${{ secrets.FIREBASE_MEASUREMENT_ID }}
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-        run: npm run scraper:new
+        run: |
+          if [ -n "${{ github.event.inputs.since }}" ]; then
+            npm run scraper:new -- --since=${{ github.event.inputs.since }}
+          else
+            npm run scraper:new
+          fi

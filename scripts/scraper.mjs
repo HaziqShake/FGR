@@ -2,10 +2,16 @@ import './init-env.js';
 import { chromium } from 'playwright';
 import { db } from '../lib/firebase-admin.js';
 import { getGPUTier, getCPUTier } from '../utils/hardware-tiers.js';
+import { parseRAMFromText, parseGPUFromText, parseCPUFromText, getSteamRatingLabel } from '../utils/parse-requirements.js';
+import { getRequirementsFromRawg } from '../utils/rawg-service.js';
 import fs from 'fs';
 import path from 'path';
 
 const STATE_FILE = path.resolve('scraper-state.json');
+
+// --since=YYYY-MM-DD  backfill mode: stop scanning once posts predate this date
+const sinceArg  = process.argv.find(a => a.startsWith('--since='));
+const SINCE_DATE = sinceArg ? new Date(sinceArg.split('=')[1]) : null;
 
 const BASE_URL = 'https://fitgirl-repacks.site';
 const DELAY_MS = 1500;       // Delay between FitGirl page loads
@@ -30,40 +36,11 @@ function cleanTitleForSearch(title) {
     .trim();
 }
 
-/**
- * Parses a RAM amount from a requirement text string.
- * Example: "Memory: 16 GB RAM" → 16
- */
-function parseRAM(text = '') {
-  const match = text.match(/(\d+)\s*GB\s*RAM/i);
-  return match ? parseInt(match[1]) : null;
-}
-
-/**
- * Parses a GPU name from a requirement text string.
- * Example: "Graphics: NVIDIA GeForce RTX 2060" → "RTX 2060"
- */
-function parseGPUName(text = '') {
-  const match = text.match(/(?:Graphics|GPU|Video):\s*([^\n<]+)/i);
-  if (!match) return null;
-  const raw = match[1].replace(/<[^>]+>/g, '').trim();
-  // Simplify: drop "NVIDIA GeForce " prefix etc.
-  return raw
-    .replace(/NVIDIA GeForce /i, '')
-    .replace(/AMD Radeon /i, '')
-    .replace(/Intel /i, '')
-    .replace(/\s*\d+\s*GB.*/i, '')  // Drop VRAM suffix
-    .trim();
-}
-
-/**
- * Parses a CPU name from a requirement text string.
- */
-function parseCPUName(text = '') {
-  const match = text.match(/(?:Processor|CPU):\s*([^\n<]+)/i);
-  if (!match) return null;
-  return match[1].replace(/<[^>]+>/g, '').trim();
-}
+// parseRAM, parseGPUName, parseCPUName are now imported from utils/parse-requirements.js
+// Aliased here for scraper internal use
+const parseRAM      = parseRAMFromText;
+const parseGPUName  = (text) => parseGPUFromText(text)?.name ?? null;
+const parseCPUName  = (text) => parseCPUFromText(text)?.name ?? null;
 
 /**
  * Strips HTML tags from a string.
@@ -109,13 +86,35 @@ async function lookupSteamSpecs(rawTitle) {
     const gameData = detailData?.[appId]?.data;
     if (!gameData) return null;
 
-    const minText = stripHtml(gameData.pc_requirements?.minimum || '');
-    const recText = stripHtml(gameData.pc_requirements?.recommended || '');
+    let minText = stripHtml(gameData.pc_requirements?.minimum || '');
+    let recText = stripHtml(gameData.pc_requirements?.recommended || '');
 
-    const minGPUname = parseGPUName(minText);
-    const recGPUname = parseGPUName(recText);
-    const minCPUname = parseCPUName(minText);
-    const recCPUname = parseCPUName(recText);
+    let minGPUname = parseGPUName(minText);
+    let recGPUname = parseGPUName(recText);
+    let minCPUname = parseCPUName(minText);
+    let recCPUname = parseCPUName(recText);
+
+    // ── RAWG Fallback: if Steam returned no PC requirements, try RAWG ─────────
+    let rawgFallback = false;
+    if (!minText && !recText) {
+      console.log(`  [RAWG] No Steam PC reqs for "${gameData.name}", trying RAWG...`);
+      const rawgReqs = await getRequirementsFromRawg(gameData.name);
+      if (rawgReqs) {
+        rawgFallback = true;
+        minText = rawgReqs.minimum || '';
+        recText = rawgReqs.recommended || '';
+        // Re-parse with RAWG data
+        minGPUname = parseGPUFromText(minText)?.name ?? null;
+        recGPUname = parseGPUFromText(recText)?.name ?? null;
+        minCPUname = parseCPUFromText(minText)?.name ?? null;
+        recCPUname = parseCPUFromText(recText)?.name ?? null;
+      }
+    }
+
+
+    // ── Steam Rating enrichment ───────────────────────────────────────────────
+    const metaScore   = gameData.metacritic?.score ?? null;
+    const ratingLabel = getSteamRatingLabel(metaScore);
 
     const steamResult = {
       steamAppId: appId,
@@ -133,10 +132,14 @@ async function lookupSteamSpecs(rawTitle) {
       recCPUTier: recCPUname ? getCPUTier(recCPUname) : null,
       minSpecsRaw: minText || null,
       recSpecsRaw: recText || null,
+      rawgFallback,
       // Steam metadata for enrichment
       developer: gameData.developers?.[0] || null,
       publisher: gameData.publishers?.[0] || null,
-      steamRating: gameData.metacritic?.score || null,
+      steamRatingScore: metaScore,
+      steamRatingLabel: ratingLabel,
+      steamRating: metaScore, // kept for backward compat (popular sort)
+      steamIsFree: gameData.is_free ?? false,
       releaseYear: gameData.release_date?.date ? new Date(gameData.release_date.date).getFullYear() : null,
       steamGenres: gameData.genres?.map(g => g.description) || [],
       steamCategories: gameData.categories?.map(c => c.description) || [],
@@ -394,6 +397,7 @@ async function runNewOnly() {
     }
 
     let newOnThisPage = 0;
+    let dateStop = false;
 
     for (const link of links) {
       const slug = link.split('/').filter(Boolean).pop();
@@ -422,15 +426,31 @@ async function runNewOnly() {
         continue;
       }
 
-      // ── Pages 2+: fast path — skip if already in DB ───────────────────────
+      // ── Pages beyond refresh window ───────────────────────────────────────
+
       if (!snap.empty) {
+        // Slug exists — check date if running a bounded backfill
+        if (SINCE_DATE) {
+          const postDate = snap.docs[0].data().postDate;
+          if (postDate && new Date(postDate) < SINCE_DATE) {
+            console.log(`[DATE-STOP] "${slug}" posted before ${sinceArg.split('=')[1]}, stopping.`);
+            dateStop = true;
+            break;
+          }
+        }
         console.log(`[EXISTS] ${slug}`);
         continue;
       }
 
-      // New slug on pages 2+ — scrape and add
+      // New slug — scrape and add
       const gameData = await scrapeGameDetails(page, link);
       if (gameData) {
+        // In backfill mode, skip posts that predate the since date
+        if (SINCE_DATE && gameData.postDate && new Date(gameData.postDate) < SINCE_DATE) {
+          console.log(`[DATE-SKIP] "${gameData.title}" posted before ${sinceArg.split('=')[1]}, stopping.`);
+          dateStop = true;
+          break;
+        }
         await gamesRef.add(gameData);
         console.log(`[NEW] ${gameData.title}`);
         newOnThisPage++;
@@ -438,8 +458,10 @@ async function runNewOnly() {
       await wait(DELAY_MS);
     }
 
-    // Only apply the early-exit logic beyond the refresh window
-    if (i > refreshPages && newOnThisPage === 0) {
+    if (dateStop) break;
+
+    // Normal early-exit: no --since active and this page had nothing new
+    if (!SINCE_DATE && i > refreshPages && newOnThisPage === 0) {
       console.log(`\n✅ Page ${i} had no new repacks. All caught up!`);
       break;
     }
