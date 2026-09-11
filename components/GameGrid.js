@@ -16,7 +16,7 @@ import TagCloud from './TagCloud';
 import GameCard from './GameCard';
 import Pagination from './Pagination';
 
-const GENRES = ['Action', 'Adventure', 'RPG', 'Strategy', 'Shooter', 'Simulation', 'Horror', 'Open World', 'Hypervisor', 'Adult', 'Selective Download', 'Has DLC'];
+const GENRES = ['Action', 'Adventure', 'RPG', 'Strategy', 'Shooter', 'Simulation', 'Horror', 'Open World', 'Hypervisor', 'Adult', 'Selective Download', 'Has DLC', 'Free on Steam'];
 const ITEMS_PER_PAGE = 30;
 
 export default function GameGrid() {
@@ -93,6 +93,7 @@ export default function GameGrid() {
         if (t === 'Selective Download') return game.hasSelectiveDownload;
         if (t === 'Has DLC') return game.dlcCount > 0;
         if (t === 'Hypervisor') return game.isHypervisor;
+        if (t === 'Free on Steam') return game.steamIsFree === true;
         return game.genres?.includes(t) || game.steamGenres?.includes(t);
       });
       const hasExcludes = excludedTags.some(t => {

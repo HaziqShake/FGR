@@ -23,6 +23,7 @@ export default function Navbar({ showAdult = false }) {
             <X size={24} />
           </button>
           <a href="https://fitgirl-repacks.site" target="_blank" rel="noopener noreferrer" className="nav-link" onClick={() => setMobileMenuOpen(false)}>FitGirl Repacks</a>
+          <Link href="/free-games" className={`nav-link ${pathname === '/free-games' ? 'active' : ''}`} onClick={() => setMobileMenuOpen(false)}>Free Games</Link>
           <Link href="/disclaimer" className={`nav-link ${pathname === '/disclaimer' ? 'active' : ''}`} onClick={() => setMobileMenuOpen(false)}>Disclaimer</Link>
           <Link href="/contact" className={`nav-link ${pathname === '/contact' ? 'active' : ''}`} onClick={() => setMobileMenuOpen(false)}>Contact</Link>
           <div className="donate-split">

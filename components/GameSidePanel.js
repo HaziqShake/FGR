@@ -1,7 +1,8 @@
 'use client';
 
-import { X, ExternalLink } from 'lucide-react';
+import { X, ExternalLink, Star } from 'lucide-react';
 import { calculateCompatibility } from '../utils/hardware-tiers';
+import { getSteamRatingLabel, getRatingColorClass } from '../utils/parse-requirements.js';
 import { useScanner } from '../hooks/useScanner';
 
 const getInitials = (title) => {
@@ -19,6 +20,10 @@ export default function GameSidePanel({ game, onClose }) {
   if (!game) return null;
 
   const status = calculateCompatibility(specs, game);
+
+  // Rating
+  const ratingLabel      = game.steamRatingLabel || (game.steamRatingScore != null ? getSteamRatingLabel(game.steamRatingScore) : 'N/A');
+  const ratingColorClass = getRatingColorClass(ratingLabel);
 
   const StatusExplanation = () => {
     switch (status) {
@@ -64,6 +69,9 @@ export default function GameSidePanel({ game, onClose }) {
                   STEAM PAGE <ExternalLink size={14} />
                 </a>
               )}
+              {game.steamIsFree && (
+                <span className="free-pill">FREE ON STEAM</span>
+              )}
             </div>
 
             <div className="specs-card">
@@ -76,6 +84,10 @@ export default function GameSidePanel({ game, onClose }) {
                     <span className="val">{game.minGPUname || 'Unknown'}</span>
                   </div>
                   <div className="spec-item">
+                    <span className="label">CPU</span>
+                    <span className="val">{game.minCPUname || 'Unknown'}</span>
+                  </div>
+                  <div className="spec-item">
                     <span className="label">RAM</span>
                     <span className="val">{game.minRAMgb ? `${game.minRAMgb} GB` : 'Unknown'}</span>
                   </div>
@@ -86,6 +98,10 @@ export default function GameSidePanel({ game, onClose }) {
                   <div className="spec-item">
                     <span className="label">GPU</span>
                     <span className="val">{game.recGPUname || 'Unknown'}</span>
+                  </div>
+                  <div className="spec-item">
+                    <span className="label">CPU</span>
+                    <span className="val">{game.recCPUname || 'Unknown'}</span>
                   </div>
                   <div className="spec-item">
                     <span className="label">RAM</span>
@@ -108,6 +124,23 @@ export default function GameSidePanel({ game, onClose }) {
                 {game.hasSelectiveDownload && <span className="tag selective">Selective DL</span>}
               </div>
             </div>
+
+            {/* Steam Rating Card */}
+            {game.steamAppId && (
+              <div className="rating-card">
+                <h3>Steam Rating</h3>
+                <div className={`rating-value ${ratingColorClass}`}>
+                  <Star size={16} />
+                  <span className="rating-score">
+                    {game.steamRatingScore != null ? game.steamRatingScore : 'N/A'}
+                  </span>
+                  <span className="rating-label-text">{ratingLabel}</span>
+                </div>
+                {game.rawgFallback && (
+                  <p className="rating-source">Requirements via RAWG</p>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
@@ -304,6 +337,48 @@ export default function GameSidePanel({ game, onClose }) {
             color: var(--text-secondary);
           }
           .tag.selective { color: #34d399; border-color: rgba(52, 211, 153, 0.3); background: rgba(52, 211, 153, 0.1); }
+
+          /* Rating Card */
+          .rating-card {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+          }
+          .rating-card h3 { font-size: 1rem; margin-bottom: 1rem; color: #fff; }
+          .rating-value {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-weight: 700;
+          }
+          .rating-score { font-size: 1.6rem; font-weight: 900; line-height: 1; }
+          .rating-label-text { font-size: 0.85rem; opacity: 0.85; }
+          .rating-source { font-size: 0.7rem; color: var(--text-secondary); margin-top: 0.5rem; }
+
+          /* Rating colour classes */
+          .rating-overwhelmingly-positive { color: #4ade80; }
+          .rating-very-positive           { color: #86efac; }
+          .rating-mostly-positive         { color: #a3e635; }
+          .rating-mixed                   { color: #fbbf24; }
+          .rating-mostly-negative         { color: #fb923c; }
+          .rating-overwhelmingly-negative { color: #f87171; }
+          .rating-na                      { color: #64748b; }
+
+          /* Free pill */
+          .free-pill {
+            padding: 0.4rem 0.9rem;
+            background: rgba(52,211,153,0.1);
+            border: 1px solid rgba(52,211,153,0.3);
+            border-radius: 8px;
+            color: #34d399;
+            font-size: 0.7rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+          }
 
           @keyframes slideIn {
             from { transform: translateX(100%); }

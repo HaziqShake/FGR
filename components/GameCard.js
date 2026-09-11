@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Monitor, Loader2, Gamepad2 } from 'lucide-react';
+import { Monitor, Loader2, Gamepad2, Star } from 'lucide-react';
+import { getSteamRatingLabel, getRatingColorClass } from '../utils/parse-requirements.js';
 
 const getInitials = (title) => {
   if (!title) return '';
@@ -14,6 +15,11 @@ const getInitials = (title) => {
 
 export default function GameCard({ game, status, searchTerm, onClick }) {
   const [imgState, setImgState] = useState(game.imageUrl ? 'loading' : 'empty');
+
+  // Rating label derived from score
+  const ratingLabel = game.steamRatingLabel || (game.steamRatingScore != null ? getSteamRatingLabel(game.steamRatingScore) : null);
+  const ratingColorClass = ratingLabel && ratingLabel !== 'N/A' ? getRatingColorClass(ratingLabel) : 'rating-na';
+
   // Highlight search matches
   let titleNode = game.title;
   if (searchTerm) {
@@ -75,6 +81,19 @@ export default function GameCard({ game, status, searchTerm, onClick }) {
           )}
           {game.minRAMgb && <span className="spec-chip ram" title="Minimum RAM">{game.minRAMgb}GB RAM</span>}
           {game.downloadSizeGB && <span className="spec-chip size">{game.downloadSizeGB.toFixed(1)}GB DL</span>}
+          {/* Steam Rating chip — shows for all Steam games, N/A if no score */}
+          {game.steamAppId && (
+            <span
+              className={`spec-chip rating-chip ${ratingColorClass}`}
+              title={ratingLabel ? `Steam Rating: ${ratingLabel}` : 'No rating available'}
+            >
+              <Star size={10} style={{marginRight: '3px', verticalAlign: 'middle'}} />
+              {game.steamRatingScore != null
+                ? `${game.steamRatingScore} · ${ratingLabel}`
+                : 'N/A'}
+            </span>
+          )}
+          {game.steamIsFree && <span className="spec-chip free-badge">FREE</span>}
           {game.steamAppId && (
             <a 
               href={`https://store.steampowered.com/app/${game.steamAppId}`} 
@@ -97,6 +116,24 @@ export default function GameCard({ game, status, searchTerm, onClick }) {
         </div>
         <a href={game.repackUrl} target="_blank" rel="noopener noreferrer" className="action-btn" onClick={(e) => { e.stopPropagation(); }}>GET REPACK</a>
       </div>
+
+      <style jsx>{`
+        .rating-chip { font-size: 0.65rem !important; }
+        .rating-overwhelmingly-positive { color: #4ade80; border-color: rgba(74,222,128,0.3); background: rgba(74,222,128,0.08); }
+        .rating-very-positive           { color: #86efac; border-color: rgba(134,239,172,0.3); background: rgba(134,239,172,0.08); }
+        .rating-mostly-positive         { color: #a3e635; border-color: rgba(163,230,53,0.3);  background: rgba(163,230,53,0.08); }
+        .rating-mixed                   { color: #fbbf24; border-color: rgba(251,191,36,0.3);  background: rgba(251,191,36,0.08); }
+        .rating-mostly-negative         { color: #fb923c; border-color: rgba(251,146,60,0.3);  background: rgba(251,146,60,0.08); }
+        .rating-overwhelmingly-negative { color: #f87171; border-color: rgba(248,113,113,0.3); background: rgba(248,113,113,0.08); }
+        .rating-na                      { color: #64748b; border-color: rgba(100,116,139,0.2); background: rgba(100,116,139,0.05); }
+        .free-badge {
+          color: #34d399 !important;
+          border-color: rgba(52,211,153,0.3) !important;
+          background: rgba(52,211,153,0.08) !important;
+          font-weight: 800;
+          letter-spacing: 0.5px;
+        }
+      `}</style>
     </div>
   );
 }
