@@ -27,6 +27,8 @@ serviceAccountKey.json
 # Scraper & Local State
 scraper-state.json
 .gemini/
+.claude/
+.claude
 antigravity/
 
 # Debug
