@@ -8,11 +8,17 @@
 // ─── GPU TIER MAP ─────────────────────────────────────────────────────────────
 const GPU_TIERS = {
   // Laptop/Mobile GPUs - MUST BE CHECKED FIRST to avoid matching desktop keys
+  // RTX 50 Laptop
+  'rtx 5090 laptop': 10, 'rtx 5080 laptop': 9,
+  'rtx 5070 ti laptop': 8, 'rtx 5070 laptop': 8,
+  'rtx 5060 laptop': 6, 'rtx 5050 laptop': 5,
+  // RTX 40 Laptop
   'rtx 4090 laptop': 9, 'rtx 4090 mobile': 9,
   'rtx 4080 laptop': 8, 'rtx 4080 mobile': 8,
   'rtx 4070 laptop': 7, 'rtx 4070 mobile': 7,
   'rtx 4060 laptop': 6, 'rtx 4060 mobile': 6,
   'rtx 4050 laptop': 5, 'rtx 4050 mobile': 5,
+  // RTX 30 Laptop
   'rtx 3080 ti laptop': 8, 'rtx 3080 ti mobile': 8,
   'rtx 3080 laptop': 7, 'rtx 3080 mobile': 7,
   'rtx 3070 ti laptop': 7, 'rtx 3070 ti mobile': 7,
@@ -20,10 +26,21 @@ const GPU_TIERS = {
   'rtx 3060 laptop': 5, 'rtx 3060 mobile': 5,
   'rtx 3050 ti laptop': 4, 'rtx 3050 ti mobile': 4,
   'rtx 3050 laptop': 3, 'rtx 3050 mobile': 3,
+  // RTX 20 Laptop
+  'rtx 2080 laptop': 6, 'rtx 2070 laptop': 5, 'rtx 2060 laptop': 4,
   'rtx 2050 laptop': 3, 'rtx 2050 mobile': 3,
+  // GTX Laptop
   'gtx 1660 ti laptop': 4, 'gtx 1660 ti mobile': 4,
   'gtx 1650 ti laptop': 3, 'gtx 1650 ti mobile': 3,
   'gtx 1650 laptop': 3, 'gtx 1650 mobile': 3,
+  // AMD RX 5000M
+  'rx 5600m': 5, 'rx 5500m': 4, 'rx 5300m': 3,
+  // AMD RX 6000M additions
+  'rx 6500m': 3, 'rx 6300m': 2,
+  // Intel Arc Laptop
+  'arc a770m': 6, 'arc a730m': 5, 'arc a550m': 4, 'arc a370m': 3, 'arc a350m': 3,
+  // Vega M
+  'vega m gh': 4, 'vega m gl': 3,
 
   // Tier 10: Top-of-the-line Desktop
   'rtx 5090': 10, 'rtx 5080': 10, 'rtx 4090': 10, 'rtx 4080': 10, 'rtx 3090': 10, 'rx 7900 xtx': 10, 'rx 7900 xt': 10, 'rx 6950 xt': 10,
@@ -156,16 +173,16 @@ export function calculateCompatibility(userSpecs, gameSpecs) {
   // ── Game Requirements ──────────────────────────────────────────────────────
   let minGPUTier, recGPUTier, minRAMgb, recRAMgb;
 
-  const hasSteamData = gameSpecs.minGPUTier != null && gameSpecs.minRAMgb != null;
+  const hasSteamData = gameSpecs.minGPUTier != null || gameSpecs.minRAMgb != null;
 
   if (!hasSteamData) {
     return 'unknown';
   }
 
-  // Use real Steam specs
-  minGPUTier = gameSpecs.minGPUTier;
+  // Use real Steam specs with intelligent fallbacks if one field is missing
+  minGPUTier = gameSpecs.minGPUTier ?? (gameSpecs.minRAMgb && gameSpecs.minRAMgb <= 4 ? 2 : 3);
   recGPUTier = gameSpecs.recGPUTier ?? minGPUTier + 2;
-  minRAMgb   = gameSpecs.minRAMgb;
+  minRAMgb   = gameSpecs.minRAMgb ?? (minGPUTier <= 2 ? 4 : minGPUTier <= 4 ? 8 : 16);
   recRAMgb   = gameSpecs.recRAMgb ?? minRAMgb * 2;
 
   // ── IGPU Hard Wall ─────────────────────────────────────────────────────────

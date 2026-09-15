@@ -10,8 +10,8 @@
   </p>
 
   <p>
-    <a href="https://fit-check-sandy.vercel.app">
-      <img src="https://img.shields.io/badge/Visit%20Website-fit--check--sandy.vercel.app-a1cc2a?style=for-the-badge&logo=vercel&logoColor=white" alt="Visit Website" />
+    <a href="https://fit-check-game.vercel.app">
+      <img src="https://img.shields.io/badge/Visit%20Website-fit--check--game.vercel.app-a1cc2a?style=for-the-badge&logo=vercel&logoColor=white" alt="Visit Website" />
     </a>
   </p>
 </div>
@@ -50,8 +50,22 @@ I built this project because I had three specific problems when using FitGirl re
 
 ### Recent Updates
 
-- **Modular Architecture Refactor**: Split the monolithic `GameGrid` into focused sub-components (`SearchBar`, `TagCloud`, `GameCard`, `Pagination`) to drastically reduce client-side lag and improve code maintainability.
-- **UI & Iconography Overhaul**: Replaced all legacy emojis with Lucide icons and refined the mobile navigation menu with solid backgrounds and improved accessibility.
+- **Free Games on Steam (`/free-games`)**:
+  - Direct integration with Steam Store APIs to browse thousands of free-to-play Steam titles in real-time.
+  - Live hardware compatibility scoring (Perfect, Good, Possible, Unsupported) matching your scanned rig.
+  - Deep-link support with automatic Steam desktop client launch (`steam://store/<id>`) and web fallback.
+  - Full multi-tag inclusion/exclusion filtering, search, and sorting (Newest, Popular, A-Z).
+- **Three-State Multi-Tag Filtering & Micro-Animations**:
+  - Interactive deterministic tag cycling: `None` → `Included` (+) → `Excluded` (-) → `None`.
+  - Added subtle pop-in micro-animations for plus/minus badges, centered text formatting, and tag overflow management.
+- **Steam Requirements Parser & Sanitizer**:
+  - Custom parser cleans nested HTML markup (`<strong>`, `<li>`, `<br>`) and extracts GPU/RAM minimum specs.
+  - Automatic HTML entity decoding (`&amp;` → `&`, `&#039;` → `'`) across all game titles and metadata.
+- **Modular Architecture Refactor**:
+  - Split the monolithic `GameGrid` into focused sub-components (`SearchBar`, `TagCloud`, `GameCard`, `Pagination`) with dedicated stylesheets (`GameGrid.css`, `SearchBar.css`, `TagCloud.css`, `SkeletonCard.css`, `free-games/page.css`).
+  - Fixed Z-index hierarchy and dropdown layering for seamless overlay on interactive cards and tags.
+- **UI & Iconography Overhaul**:
+  - Replaced legacy emojis with crisp Lucide icons and refined the mobile navigation menu with solid backgrounds and improved accessibility.
 
 #### Hardware Database Overhaul
 
@@ -78,14 +92,19 @@ I built this project because I had three specific problems when using FitGirl re
 | File | Function |
 | :--- | :--- |
 | `app/page.js` | Main entry point; orchestrates the core layout and components. |
+| `app/free-games/page.js` | Free Steam games catalog with search, tag filters, and compatibility matcher. |
+| `app/api/steam-games/route.js` | Steam Store & appdetails API proxy with sorting, caching, and requirement parser. |
 | `components/GameGrid.js` | The central data hub; handles filtering, sorting, and pagination. |
 | `components/Scanner.js` | Hardware selection interface; allows users to configure their rig. |
 | `components/GameSidePanel.js` | Detailed game view; displays full specs and compatibility explanations. |
 | `components/SearchBar.js` | Search and filtering UI logic. |
+| `components/TagCloud.js` | Multi-state tag inclusion/exclusion cloud with animations. |
 | `components/GameCard.js` | Modular component for individual repack displays. |
 | `utils/hardware-data.js` | The source of truth for all CPU/GPU tiers and models. |
 | `utils/hardware-tiers.js` | The scoring engine logic for compatibility calculation. |
+| `utils/parse-requirements.js` | System requirements parser and text sanitizer for Steam specs. |
 | `hooks/useScanner.js` | Custom hook for managing persistent local storage of user specs. |
+
 
 ---
 
@@ -96,3 +115,7 @@ I built this project because I had three specific problems when using FitGirl re
 > FitCheck was built by an individual developer as a personal project to help PC gamers make informed decisions about whether their hardware can run a given game.
 >
 > The legality of downloading and using repacked games varies by country. It is your responsibility to understand and comply with the laws of your jurisdiction regarding software licensing and copyright.
+
+### AI Transparency
+
+This project has been *enhanced* with AI assistance (code suggestions, boilerplate generation). The core concept, design decisions, feature direction, hardware database curation, and the majority of development work were done manually by the author.

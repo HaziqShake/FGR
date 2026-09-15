@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
-  --background: #0e0e0e;
+  --background: #141414;
   --foreground: #ffffff;
   --accent: #a1cc2a;
   --card-bg: #1a1a1a;
@@ -92,6 +92,15 @@ a {
 
 .nav-link:hover, .nav-link.active {
   color: var(--accent);
+}
+
+/* Steam-coloured nav link */
+.steam-nav-link {
+  color: #67c1f5 !important;
+  font-weight: 700;
+}
+.steam-nav-link:hover, .steam-nav-link.active {
+  color: #9ddbff !important;
 }
 
 .donate-split {
@@ -314,7 +323,7 @@ a {
 /* Thumbnail Loading & Placeholder Styling */
 .image-wrapper {
   position: relative;
-  background: #090909;
+  background: #0f0f0f;
 }
 
 /* Spinner Rotate Animation */

@@ -9,6 +9,17 @@
 
 import { getGPUTier, getCPUTier } from './hardware-tiers.js';
 
+// ─── HTML CLEANER ─────────────────────────────────────────────────────────────
+function cleanHtml(html = '') {
+  if (!html || typeof html !== 'string') return '';
+  return html
+    .replace(/<\s*\/?\s*(?:li|br|p|div|tr|h\d)\s*\/?>/gi, '\n')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/[ \t]+/g, ' ');
+}
+
 // ─── RAM PARSER ──────────────────────────────────────────────────────────────
 
 /**
@@ -17,8 +28,16 @@ import { getGPUTier, getCPUTier } from './hardware-tiers.js';
  */
 export function parseRAMFromText(text = '') {
   if (!text) return null;
-  const match = text.match(/(\d+)\s*GB(?:\s+(?:of\s+)?RAM)?/i);
-  return match ? parseInt(match[1], 10) : null;
+  const clean = cleanHtml(text);
+  const match = clean.match(/(?:memory|ram):\s*([0-9.]+)\s*(GB|MB)/i) ||
+                clean.match(/([0-9.]+)\s*(GB|MB)(?:\s+(?:of\s+)?RAM)?/i);
+  if (!match) return null;
+  const num = parseFloat(match[1]);
+  if (isNaN(num)) return null;
+  if (match[2].toUpperCase() === 'MB') {
+    return Math.round(num / 1024);
+  }
+  return Math.round(num);
 }
 
 // ─── GPU PARSER ──────────────────────────────────────────────────────────────
@@ -26,39 +45,45 @@ export function parseRAMFromText(text = '') {
 /**
  * Normalises a raw GPU string into a clean model name.
  * e.g. "NVIDIA GeForce RTX 2060 6GB" → "RTX 2060"
- *      "AMD Radeon RX 580 8GB"       → "RX 580 8GB" (keeps VRAM when helpful)
+ *      "AMD Radeon RX 580 8GB"       → "RX 580"
  */
 export function normaliseGPUName(raw = '') {
   return raw
     .replace(/nvidia\s+geforce\s*/gi, '')
+    .replace(/geforce\s*/gi, '')
     .replace(/amd\s+radeon\s*/gi, '')
+    .replace(/radeon\s*/gi, '')
     .replace(/intel\s+/gi, '')
     .replace(/\s*\d+\s*gb\s*(vram|gddr\w*)?/gi, '') // strip VRAM
     .replace(/\s*\(.*?\)/g, '')                      // strip parentheticals
+    .replace(/™|®/g, '')
+    .replace(/or\s+(?:equivalent|better|higher|greater)/gi, '')
     .trim();
 }
 
 /**
  * Extracts a GPU model name from a requirement line.
- * Handles slash-separated alternatives and picks the first (usually the best).
+ * Handles slash/comma-separated alternatives and picks the first.
  * Returns { name, tier }.
  */
 export function parseGPUFromText(text = '') {
   if (!text) return null;
 
-  // Match "Graphics: <model> [ / <alt>]"  or  "Video Card: <model>"
-  const lineMatch = text.match(
-    /(?:graphics|gpu|video\s*card|video):\s*([^\n<]+)/i
+  const clean = cleanHtml(text);
+
+  // Match "Graphics: <model>" or "Video Card: <model>" or "Video: <model>"
+  const lineMatch = clean.match(
+    /(?:graphics|gpu|video\s*card|video):\s*([^\n;•]+)/i
   );
   if (!lineMatch) return null;
 
   const raw = lineMatch[1]
-    .replace(/<[^>]+>/g, '')  // strip HTML
-    .split(/\s*[\/|]\s*/)[0]  // take first alternative
+    .split(/\s*[\/|,]\s*/)[0]  // take first alternative
+    .replace(/or\s+better|or\s+equivalent|or\s+higher/gi, '')
     .trim();
 
   const name = normaliseGPUName(raw);
-  if (!name) return null;
+  if (!name || name.length < 2) return null;
 
   return { name, tier: getGPUTier(name) };
 }
@@ -75,10 +100,13 @@ export function normaliseCPUName(raw = '') {
   return raw
     .replace(/intel\s+core\s*/gi, '')
     .replace(/intel\s+/gi, '')
+    .replace(/amd\s+/gi, '')
     .replace(/@\s*[\d.]+\s*GHz/gi, '')  // strip clock speed
     .replace(/\s*\(.*?\)/g, '')         // strip parentheticals
     .replace(/\s*processor/gi, '')
     .replace(/\s*cpu/gi, '')
+    .replace(/™|®/g, '')
+    .replace(/or\s+(?:equivalent|better|higher|greater)/gi, '')
     .trim();
 }
 
@@ -89,18 +117,20 @@ export function normaliseCPUName(raw = '') {
 export function parseCPUFromText(text = '') {
   if (!text) return null;
 
-  const lineMatch = text.match(
-    /(?:processor|cpu|processor\s*\/\s*cpu):\s*([^\n<]+)/i
+  const clean = cleanHtml(text);
+
+  const lineMatch = clean.match(
+    /(?:processor|cpu|processor\s*\/\s*cpu):\s*([^\n;•]+)/i
   );
   if (!lineMatch) return null;
 
   const raw = lineMatch[1]
-    .replace(/<[^>]+>/g, '')
-    .split(/\s*[\/|]\s*/)[0]
+    .split(/\s*[\/|,]\s*/)[0]
+    .replace(/or\s+better|or\s+equivalent|or\s+higher/gi, '')
     .trim();
 
   const name = normaliseCPUName(raw);
-  if (!name) return null;
+  if (!name || name.length < 2) return null;
 
   return { name, tier: getCPUTier(name) };
 }
@@ -111,7 +141,7 @@ export function parseCPUFromText(text = '') {
  * Parses a pair of minimum/recommended requirement strings into a structured
  * spec object that can be stored in Firestore or passed to calculateCompatibility().
  *
- * @param {string} minText - Raw minimum requirements text (HTML stripped is fine)
+ * @param {string} minText - Raw minimum requirements text
  * @param {string} recText - Raw recommended requirements text
  * @returns {{
  *   minGPUname: string|null, minGPUTier: number|null,

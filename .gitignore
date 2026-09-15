@@ -20,6 +20,9 @@ build/
 .env.test.local
 .env.production.local
 *.env*
+*-adminsdk-*.json
+firebase-service-account*.json
+serviceAccountKey.json
 
 # Scraper & Local State
 scraper-state.json

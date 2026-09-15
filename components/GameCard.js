@@ -95,15 +95,20 @@ export default function GameCard({ game, status, searchTerm, onClick }) {
           )}
           {game.steamIsFree && <span className="spec-chip free-badge">FREE</span>}
           {game.steamAppId && (
-            <a 
-              href={`https://store.steampowered.com/app/${game.steamAppId}`} 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="spec-chip steam" 
+            <a
+              href={`https://store.steampowered.com/app/${game.steamAppId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="spec-chip steam"
               onClick={e => e.stopPropagation()}
             >
               Steam ↗
             </a>
+          )}
+          {game.source === 'steam' && (
+            <span className="spec-chip steam-badge" title="Free on Steam">
+              Steam
+            </span>
           )}
           {game.isHypervisor && <span className="spec-chip hv">Hypervisor</span>}
         </div>
@@ -114,7 +119,19 @@ export default function GameCard({ game, status, searchTerm, onClick }) {
           {game.hasSelectiveDownload && <span className="mini-tag selective">Selective DL</span>}
           {game.dlcCount > 0 && <span className="mini-tag dlc">+{game.dlcCount} DLC</span>}
         </div>
-        <a href={game.repackUrl} target="_blank" rel="noopener noreferrer" className="action-btn" onClick={(e) => { e.stopPropagation(); }}>GET REPACK</a>
+        {game.source === 'steam' ? (
+          <a
+            href={game.steamUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="action-btn steam-action-btn"
+            onClick={(e) => { e.stopPropagation(); }}
+          >
+            FREE ON STEAM →
+          </a>
+        ) : (
+          <a href={game.repackUrl} target="_blank" rel="noopener noreferrer" className="action-btn" onClick={(e) => { e.stopPropagation(); }}>GET REPACK</a>
+        )}
       </div>
 
       <style jsx>{`
@@ -132,6 +149,26 @@ export default function GameCard({ game, status, searchTerm, onClick }) {
           background: rgba(52,211,153,0.08) !important;
           font-weight: 800;
           letter-spacing: 0.5px;
+        }
+        .steam-badge {
+          background: rgba(103, 193, 245, 0.05);
+          border-color: rgba(103, 193, 245, 0.3);
+          color: #67c1f5;
+          font-size: 0.6rem;
+          font-weight: 700;
+          padding: 0.2rem 0.5rem;
+          border-radius: 4px;
+          text-transform: capitalize;
+          letter-spacing: 0.5px;
+        }
+        .steam-action-btn {
+          background: #67c1f5;
+          color: black;
+          font-weight: 900;
+        }
+        .steam-action-btn:hover {
+          background: #5ab8f0;
+          transform: translateY(-2px);
         }
       `}</style>
     </div>

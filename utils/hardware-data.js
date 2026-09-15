@@ -54,14 +54,25 @@ export const GPU_DATA = [
     { name: 'MX450', tier: 3 }, { name: 'MX350', tier: 2 },
     { name: 'MX250', tier: 2 }, { name: 'MX150', tier: 2 }
   ]},
-  { brand: 'NVIDIA', series: 'RTX Laptop GPUs', models: [
+  { brand: 'NVIDIA', series: 'RTX 50 Series Laptop', models: [
+    { name: 'RTX 5090 Laptop GPU', tier: 10 }, { name: 'RTX 5080 Laptop GPU', tier: 9 },
+    { name: 'RTX 5070 Ti Laptop GPU', tier: 8 }, { name: 'RTX 5070 Laptop GPU', tier: 8 },
+    { name: 'RTX 5060 Laptop GPU', tier: 6 }, { name: 'RTX 5050 Laptop GPU', tier: 5 }
+  ]},
+  { brand: 'NVIDIA', series: 'RTX 40 Series Laptop', models: [
     { name: 'RTX 4090 Laptop', tier: 9 }, { name: 'RTX 4080 Laptop', tier: 8 },
     { name: 'RTX 4070 Laptop', tier: 7 }, { name: 'RTX 4060 Laptop', tier: 6 },
-    { name: 'RTX 4050 Laptop', tier: 5 }, { name: 'RTX 3080 Ti Laptop', tier: 8 },
+    { name: 'RTX 4050 Laptop', tier: 5 }
+  ]},
+  { brand: 'NVIDIA', series: 'RTX 30 Series Laptop', models: [
+    { name: 'RTX 3080 Ti Laptop', tier: 8 },
     { name: 'RTX 3080 Laptop', tier: 7 }, { name: 'RTX 3070 Ti Laptop', tier: 7 },
     { name: 'RTX 3070 Laptop', tier: 6 }, { name: 'RTX 3060 Laptop', tier: 5 },
-    { name: 'RTX 3050 Ti Laptop', tier: 4 }, { name: 'RTX 3050 Laptop', tier: 3 },
-    { name: 'RTX 2050 Laptop', tier: 3 }
+    { name: 'RTX 3050 Ti Laptop', tier: 4 }, { name: 'RTX 3050 Laptop', tier: 3 }
+  ]},
+  { brand: 'NVIDIA', series: 'RTX 20 Series Laptop', models: [
+    { name: 'RTX 2080 Laptop', tier: 6 }, { name: 'RTX 2070 Laptop', tier: 5 },
+    { name: 'RTX 2060 Laptop', tier: 4 }, { name: 'RTX 2050 Laptop', tier: 3 }
   ]},
   { brand: 'NVIDIA', series: 'GTX Laptop GPUs', models: [
     { name: 'GTX 1660 Ti Laptop', tier: 4 }, { name: 'GTX 1650 Ti Laptop', tier: 3 },
@@ -109,19 +120,34 @@ export const GPU_DATA = [
     { name: 'R9 270X', tier: 3 }, { name: 'R7 370', tier: 3 },
     { name: 'R7 360', tier: 2 }
   ]},
-  { brand: 'AMD', series: 'Radeon Laptop GPUs', models: [
+  { brand: 'AMD', series: 'Radeon RX 7000M Laptop Series', models: [
     { name: 'Radeon RX 7900M', tier: 9 }, { name: 'Radeon RX 7600M XT', tier: 6 },
-    { name: 'Radeon RX 7600M', tier: 5 }, { name: 'Radeon RX 7600S', tier: 5 },
+    { name: 'Radeon RX 7600M', tier: 5 }, { name: 'Radeon RX 7600S', tier: 5 }
+  ]},
+  { brand: 'AMD', series: 'Radeon RX 6000M Laptop Series', models: [
     { name: 'Radeon RX 6850M XT', tier: 7 }, { name: 'Radeon RX 6800M', tier: 7 },
     { name: 'Radeon RX 6700M', tier: 6 }, { name: 'Radeon RX 6600M', tier: 5 },
-    { name: 'Radeon RX 6800S', tier: 6 }, { name: 'Radeon RX 6700S', tier: 5 }
+    { name: 'Radeon RX 6800S', tier: 6 }, { name: 'Radeon RX 6700S', tier: 5 },
+    { name: 'Radeon RX 6500M', tier: 3 }, { name: 'Radeon RX 6300M', tier: 2 }
+  ]},
+  { brand: 'AMD', series: 'Radeon RX 5000M Laptop Series', models: [
+    { name: 'Radeon RX 5600M', tier: 5 }, { name: 'Radeon RX 5500M', tier: 4 },
+    { name: 'Radeon RX 5300M', tier: 3 }
+  ]},
+  { brand: 'AMD', series: 'Radeon Vega M (Kaby Lake G)', models: [
+    { name: 'Radeon RX Vega M GH', tier: 4 }, { name: 'Radeon RX Vega M GL', tier: 3 }
   ]},
   { brand: 'Intel', series: 'Arc B-Series (Battlemage)', models: [
     { name: 'Arc B580', tier: 6 }, { name: 'Arc B570', tier: 5 }
   ]},
-  { brand: 'Intel', series: 'Arc A-Series', models: [
+  { brand: 'Intel', series: 'Arc A-Series Desktop', models: [
     { name: 'Arc A770', tier: 6 }, { name: 'Arc A750', tier: 6 },
     { name: 'Arc A580', tier: 5 }, { name: 'Arc A380', tier: 3 }
+  ]},
+  { brand: 'Intel', series: 'Arc A-Series Laptop', models: [
+    { name: 'Arc A770M', tier: 6 }, { name: 'Arc A730M', tier: 5 },
+    { name: 'Arc A550M', tier: 4 }, { name: 'Arc A370M', tier: 3 },
+    { name: 'Arc A350M', tier: 3 }
   ]},
   { brand: 'Integrated', series: 'AMD APU Graphics (Modern)', models: [
     { name: 'AMD Radeon 890M', tier: 4 },

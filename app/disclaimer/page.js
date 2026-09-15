@@ -1,6 +1,6 @@
 'use client';
 
-import { Shield, Info, FileText, Zap, Copyright, OctagonAlert, Globe, Monitor } from 'lucide-react';
+import { Shield, Info, FileText, Zap, Copyright, OctagonAlert, Globe, Monitor, Bot } from 'lucide-react';
 
 export default function DisclaimerPage() {
   return (
@@ -86,6 +86,14 @@ export default function DisclaimerPage() {
             </div>
             <p>FitCheck is designed <strong>strictly for Windows PC hardware</strong>. It does not calculate emulation overhead for macOS or Linux/SteamOS via translation layers like CrossOver or Proton.</p>
             <p className="last-updated">Last updated: April 2026</p>
+          </section>
+
+          <section className="dis-card">
+            <div className="card-header">
+              <Bot size={20} className="header-icon" />
+              <h2>AI Transparency</h2>
+            </div>
+            <p>This project has been <em>enhanced</em> with AI assistance (code suggestions, boilerplate generation). The core concept, design decisions, feature direction, hardware database curation, and the majority of development work were done manually by the author.</p>
           </section>
 
         </div>
