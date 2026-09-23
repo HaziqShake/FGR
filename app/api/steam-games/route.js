@@ -271,12 +271,47 @@ function sortClientSide(games, sort) {
   });
 }
 
+// ─── SIMPLE IN-MEMORY RATE LIMITER ───────────────────────────────────────────
+// Per-instance sliding window (good enough for this traffic level; use Upstash
+// or similar for distributed rate limiting at higher scale).
+const RATE_LIMIT_MAX = 30;          // max requests
+const RATE_LIMIT_WINDOW_MS = 60000; // per minute
+const rateLimitHits = new Map();
+
+function getClientIp(request) {
+  const forwarded = request.headers.get('x-forwarded-for');
+  if (forwarded) return forwarded.split(',')[0].trim();
+  return request.headers.get('x-real-ip') || 'unknown';
+}
+
+function isRateLimited(ip) {
+  const now = Date.now();
+  const entry = rateLimitHits.get(ip);
+  if (!entry || now - entry.start > RATE_LIMIT_WINDOW_MS) {
+    rateLimitHits.set(ip, { count: 1, start: now });
+    return false;
+  }
+  entry.count += 1;
+  return entry.count > RATE_LIMIT_MAX;
+}
+
 // ─── GET HANDLER ─────────────────────────────────────────────────────────────
 export async function GET(request) {
+  // Rate limit before doing any work
+  const clientIp = getClientIp(request);
+  if (isRateLimited(clientIp)) {
+    return NextResponse.json(
+      { error: 'Too many requests, please slow down.', games: [], total: 0, page: 1, totalPages: 1 },
+      { status: 429, headers: { 'Retry-After': '60' } }
+    );
+  }
+
   try {
     const { searchParams } = new URL(request.url);
-    const page        = Math.max(1, parseInt(searchParams.get('page')  || '1',  10));
-    const limit       = Math.min(50, parseInt(searchParams.get('limit') || '12', 10));
+    const rawPage  = parseInt(searchParams.get('page')  || '1',  10);
+    const rawLimit = parseInt(searchParams.get('limit') || '12', 10);
+    const page  = Number.isNaN(rawPage)  ? 1  : Math.max(1, rawPage);
+    const limit = Number.isNaN(rawLimit) ? 12 : Math.min(50, Math.max(1, rawLimit));
     const search      = (searchParams.get('search') || '').trim();
     const sort        = searchParams.get('sort') || 'newest';
     const tagsParam   = searchParams.get('tags') || '';
@@ -367,7 +402,7 @@ export async function GET(request) {
   } catch (err) {
     console.error('[API /steam-games]', err.message);
     return NextResponse.json(
-      { error: err.message, games: [], total: 0, page: 1, totalPages: 1 },
+      { error: 'Failed to fetch games. Please try again later.', games: [], total: 0, page: 1, totalPages: 1 },
       { status: 500 }
     );
   }
