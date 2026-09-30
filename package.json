@@ -23,7 +23,7 @@
     "firebase": "^12.12.0",
     "firebase-admin": "^13.10.0",
     "lucide-react": "^1.8.0",
-    "next": "16.2.3",
+    "next": "^16.3.6",
     "playwright": "^1.59.1",
     "playwright-extra": "^4.3.6",
     "playwright-extra-plugin-stealth": "^0.0.1",
@@ -32,6 +32,6 @@
   },
   "devDependencies": {
     "eslint": "^9",
-    "eslint-config-next": "16.2.3"
+    "eslint-config-next": "^16.3.6"
   }
 }
